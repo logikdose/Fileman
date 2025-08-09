@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.tauri.app/config/1",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "productName": "fileman",
+  "mainBinaryName": "fileman",
+  "version": "0.1.0",
+  "identifier": "dose.logic.fileman",
+  "plugins": {},
+  "app": {
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "Fileman",
+        "width": 1000,
+        "height": 720,
+        "resizable": true,
+        "decorations": false,
+        "minWidth": 1000,
+        "minHeight": 720,
+        "shadow": true,
+        "transparent": true
+      }
+    ]
+  },
+  "bundle": {
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/share/README.md": "../README.md",
+          "/usr/share/assets": "../src/assets"
+        }
+      }
+    }
+  }
+}
