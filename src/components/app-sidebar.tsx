@@ -24,7 +24,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar collapsible="offcanvas" {...props}>
             <SidebarHeader data-tauri-drag-region>
-                <div className="flex items-center gap-2 bg-muted/10 rounded-md" data-tauri-drag-region>
+                <div className="flex items-center gap-2 bg-muted/10 p-2 rounded-xl" data-tauri-drag-region>
                     <img src={FilemanIcon} alt="Fileman" className="size-10" data-tauri-drag-region />
                     <span className="text-base text-muted-foreground" data-tauri-drag-region>Fileman</span>
                 </div>
@@ -48,7 +48,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
                             {/* No Sessions */}
                             {sessions.length === 0 && (
-                                <div className="flex items-center justify-center p-6 text-sm text-muted-foreground text-center">
+                                <div className="flex items-center justify-center p-6 text-sm text-muted-foreground text-center border rounded-md">
                                     No sessions found, start by creating one.
                                 </div>
                             )}

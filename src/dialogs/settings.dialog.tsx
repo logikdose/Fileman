@@ -328,7 +328,7 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                                     Highlight Bookmarks
                                                 </Label>
                                                 <p id={`highlight-bookmarks-description`} className="text-muted-foreground text-xs">
-                                                    Highlight bookmarks that belong to the active session.
+                                                    Highlight bookmarks from same session as the active tab.
                                                 </p>
                                             </div>
                                         </div>
@@ -349,7 +349,7 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                                     Priority Bookmarks
                                                 </Label>
                                                 <p id={`priority-bookmarks-description`} className="text-muted-foreground text-xs">
-                                                    Show bookmarks from the active session first.
+                                                    Show bookmarks from the same session as the active tab at the top of the bookmarks list.
                                                 </p>
                                             </div>
                                         </div>
@@ -395,7 +395,7 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
 
                                         <div className="mt-4 text-xs space-y-1">
                                             <p className="text-muted-foreground">
-                                                Version: <span className="font-semibold">0.1.0</span>
+                                                Version: <span className="font-semibold">1.0.0</span>
                                             </p>
                                             <p className="text-muted-foreground">
                                                 Built with 🍺

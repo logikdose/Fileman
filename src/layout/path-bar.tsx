@@ -174,24 +174,24 @@ export default function PathBar() {
     }
 
     // Hotkeys
-    useHotkeys("meta+d", (e) => {
+    useHotkeys("meta+d, ctrl+d", (e) => {
         e.preventDefault();
         handleDownload();
     });
-    useHotkeys("meta+u", (e) => {
+    useHotkeys("meta+u, ctrl+u", (e) => {
         e.preventDefault();
         handleUpload();
     });
-    useHotkeys("meta+n", (e) => {
+    useHotkeys("meta+n, ctrl+n", (e) => {
         e.preventDefault();
         setCreateFolderDialog(true);
     });
-    useHotkeys("meta+b", (e) => {
+    useHotkeys("meta+b, ctrl+b", (e) => {
         e.preventDefault();
         e.stopPropagation();
         setCreateBookmarkDialogOpen(true);
     });
-    useHotkeys("meta+w", (e) => {
+    useHotkeys("meta+w, ctrl+w", (e) => {
         e.preventDefault();
         closeActiveTab();
     });

@@ -5,7 +5,6 @@ import ListView from "./file-viewer/list-view";
 import useSessionStore from "@/stores/session.store";
 import { useEffect, useState } from "react";
 import DeleteFilesDialog from "@/dialogs/delete-files.dialog";
-import { Ripple } from "@/components/magicui/ripple";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Footer from "./footer";
 import Bookmarks from "./bookmarks";
@@ -16,6 +15,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import RenameItemDialog from "@/dialogs/rename-file.dialog";
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { MorphingText } from "@/components/magicui/morphing-text";
 
 
 export default function FileBrowser() {
@@ -199,7 +199,7 @@ export default function FileBrowser() {
                     </div>
 
                     {/* Window Controls */}
-                    <div className="w-[80px] h-full absolute right-0 top-0 bg-gradient-to-r from-transparent to-black rounded-tr-xl">
+                    <div className="w-[80px] h-full absolute right-0 top-0 bg-gradient-to-r from-transparent to-background rounded-tr-xl">
                         <div className="flex items-center justify-center h-full gap-1.5">
                             <button
                                 className="size-[15px] rounded-lg bg-yellow-600 hover:bg-yellow-300"
@@ -259,14 +259,7 @@ export default function FileBrowser() {
                 {/* No Tab */}
                 {tabs.length === 0 && (
                     <div className="relative flex flex-1 w-full flex-col items-center justify-center overflow-hidden bg-background rounded-xl">
-                        <Ripple />
-
-                        {/* Content */}
-                        <div className="flex flex-col items-center justify-center p-6 opacity-5">
-                            <h2 className="text-[36px]">
-                                Fileman
-                            </h2>
-                        </div>
+                        <MorphingText texts={["Fileman", "SFTP", "Browser", "SSH"]} />
                     </div>
                 )}
             </div>

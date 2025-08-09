@@ -8,7 +8,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": "msi",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -17,10 +17,10 @@
       "icons/icon.ico"
     ]
   },
-  "productName": "fileman",
-  "mainBinaryName": "fileman",
+  "productName": "Fileman",
+  "mainBinaryName": "Fileman",
   "version": "0.1.0",
-  "identifier": "dose.logic.fileman",
+  "identifier": "dose.logik.fileman",
   "plugins": {},
   "app": {
     "security": {
@@ -39,15 +39,5 @@
         "transparent": true
       }
     ]
-  },
-  "bundle": {
-    "linux": {
-      "deb": {
-        "files": {
-          "/usr/share/README.md": "../README.md",
-          "/usr/share/assets": "../src/assets"
-        }
-      }
-    }
   }
 }

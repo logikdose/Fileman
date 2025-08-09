@@ -473,53 +473,64 @@ const useTabStore = create<TabStore>()(
         },
 
         goBack: (tabId) => {
+          let filePath: string | undefined;
+          const sessionId = get().getTabById(tabId)?.session?.id;
+          if (!sessionId) return;
+
+          // Set state
           set((state) => {
             const tab = state.tabs.find((t) => t.id === tabId);
+            filePath = tab?.history?.[tab.historyIndex - 1];
             if (tab && tab.historyIndex > 0) {
               tab.historyIndex -= 1;
-              tab.filePath = tab.history[tab.historyIndex];
+              tab.filePath = filePath;
               tab.scrollPosition = 0;
               tab.selectedFiles = [];
               tab.lastActivity = new Date();
             }
           });
 
-          // Load the new directory after navigating
-          const sessionId = get().getTabById(tabId)?.session?.id;
-          if (!sessionId) return;
-          get().loadDirectory(tabId, sessionId);
+          // Navigate to path
+          if (!filePath) return;
+          get().navigateToPath(tabId, sessionId, filePath);
         },
 
         goForward: (tabId) => {
+          let filePath: string | undefined;
+          const sessionId = get().getTabById(tabId)?.session?.id;
+          if (!sessionId) return;
+
           set((state) => {
             const tab = state.tabs.find((t) => t.id === tabId);
+            filePath = tab?.history?.[tab.historyIndex + 1];
             if (tab && tab.historyIndex < tab.history.length - 1) {
               tab.historyIndex += 1;
-              tab.filePath = tab.history[tab.historyIndex];
+              tab.filePath = filePath;
               tab.scrollPosition = 0;
               tab.selectedFiles = [];
               tab.lastActivity = new Date();
             }
           });
 
-          // Load the new directory after navigating
-          const sessionId = get().getTabById(tabId)?.session?.id;
-          if (!sessionId) return;
-          get().loadDirectory(tabId, sessionId);
+          // Navigate to path
+          if (!filePath) return;
+          get().navigateToPath(tabId, sessionId, filePath);
         },
 
         goUp: (tabId) => {
+          let filePath: string | undefined;
+          const sessionId = get().getTabById(tabId)?.session?.id;
+          if (!sessionId) return;
+
           set((state) => {
             const tab = state.tabs.find((t) => t.id === tabId);
+
             if (tab) {
               const parentDir = tab.filePath?.split("/").slice(0, -1).join("/");
 
               // If parent directory is empty, set to root
-              if (!parentDir) {
-                tab.filePath = "/";
-              } else {
-                tab.filePath = parentDir;
-              }
+              filePath = parentDir || "/";
+              tab.filePath = filePath;
 
               // Reset scroll position and selection
               tab.scrollPosition = 0;
@@ -528,10 +539,9 @@ const useTabStore = create<TabStore>()(
             }
           });
 
-          // Load the parent directory
-          const sessionId = get().getTabById(tabId)?.session?.id;
-          if (!sessionId) return;
-          get().loadDirectory(tabId, sessionId);
+          // Navigate to path
+          if (!filePath) return;
+          get().navigateToPath(tabId, sessionId, filePath);
         },
 
         canGoBack: (tabId) => {
