@@ -5,6 +5,7 @@ import {
     Bell,
     Computer,
     FolderOpen,
+    Github,
     Info,
     Moon,
     Paintbrush,
@@ -53,7 +54,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import useBookmarkStore from "@/stores/bookmark.store"
 import useProcessStore from "@/stores/process.store"
-
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 
 const data = {
@@ -139,7 +140,7 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                         </SidebarContent>
                     </Sidebar>
                     <main className="flex h-[480px] flex-1 flex-col overflow-hidden">
-                        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+                        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12" data-tauri-drag-region>
                             <div className="flex items-center gap-2 px-4">
                                 <Breadcrumb>
                                     <BreadcrumbList>
@@ -390,16 +391,16 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                     <>
                                         <h2 className="text-lg">About</h2>
                                         <p className="text-sm text-muted-foreground">
-                                            FileMan is a modern file management application built with Tauri and React.
+                                            Fileman is a modern SFTP file management application built with Tauri and React.
                                         </p>
 
-                                        <div className="mt-4 text-xs space-y-1">
-                                            <p className="text-muted-foreground">
-                                                Version: <span className="font-semibold">1.0.0</span>
+                                        <div className="mt-4 space-y-1">
+                                            <p className="text-muted-foreground text-sm">
+                                                Version: <span className="font-semibold">1.0.1</span>
                                             </p>
-                                            <p className="text-muted-foreground">
-                                                Built with 🍺
-                                            </p>
+                                            <Button className="mt-2" variant="outline" onClick={() => openUrl("https://github.com/logikdose/fileman")}>
+                                                Github <Github />
+                                            </Button>
                                         </div>
                                     </>
                                 )}

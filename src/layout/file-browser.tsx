@@ -191,7 +191,7 @@ export default function FileBrowser() {
                                 </button>
 
                                 {/* Space for window controls */}
-                                <div className="w-[80px] h-10 flex-shrink-0">
+                                <div className="w-[80px] h-10 flex-shrink-0" data-tauri-drag-region>
 
                                 </div>
                             </div>
@@ -200,7 +200,7 @@ export default function FileBrowser() {
 
                     {/* Window Controls */}
                     <div className="w-[80px] h-full absolute right-0 top-0 bg-gradient-to-r from-transparent to-background rounded-tr-xl">
-                        <div className="flex items-center justify-center h-full gap-1.5">
+                        <div className="flex items-center justify-center h-full gap-1.5" data-tauri-drag-region>
                             <button
                                 className="size-[15px] rounded-lg bg-yellow-600 hover:bg-yellow-300"
                                 onClick={handleMinimize}

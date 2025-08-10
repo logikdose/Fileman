@@ -313,8 +313,13 @@ export default function PathBar() {
                             className="text-green-500 rounded-2xl "
                             variant="outline"
                             size="xsm"
-                            onClick={() => {
-                                useSessionStore.getState().connectToSession(session.id);
+                            onClick={async () => {
+                                const connected = await useSessionStore.getState().connectToSession(session.id);
+                                if (connected) {
+                                    toast.success(`Connected to session ${session.id}`);
+                                } else {
+                                    toast.error(`Failed to connect to session ${session.id}`);
+                                }
                             }}
                         >
                             Connect

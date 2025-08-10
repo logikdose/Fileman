@@ -32,6 +32,12 @@ To start developing Fileman, you need to set up your environment. This includes 
 3. Install Rust
    If you haven't installed Rust yet, begin by installing it using [rustup](https://rustup.rs/)
 
+4. Add unique Encryption key to `.env` file (Create new if it doesn't exist at the root of the project)
+
+   ```bash
+   VITE_ENCRYPTION_KEY=your_secret_key_here
+   ```
+
 4. Run the application
 
    ```bash
@@ -46,5 +52,5 @@ To start developing Fileman, you need to set up your environment. This includes 
 1. Run build command
 
    ```bash
-   npm run tauri build
+   npm run fileman-build
    ```

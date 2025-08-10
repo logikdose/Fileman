@@ -1,10 +1,13 @@
 import { create } from "zustand";
+import CryptoJS from "crypto-js";
 import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { invoke } from "@tauri-apps/api/core";
 import ISession from "../models/session.model";
 import { ConnectionState } from "../types/ConnectionState";
 import { FileItem } from "../types/FileItem";
+
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 
 interface SessionStore {
   // Sessions state
@@ -57,6 +60,21 @@ interface SessionStore {
   clearAllConnections: () => Promise<void>;
 }
 
+function encrypt(text?: string): string | undefined {
+  if (!text) return undefined;
+  return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
+}
+
+function decrypt(cipher?: string): string | undefined {
+  if (!cipher) return undefined;
+  try {
+    const bytes = CryptoJS.AES.decrypt(cipher, ENCRYPTION_KEY);
+    return bytes.toString(CryptoJS.enc.Utf8);
+  } catch {
+    return undefined;
+  }
+}
+
 const useSessionStore = create<SessionStore>()(
   devtools(
     persist(
@@ -82,6 +100,8 @@ const useSessionStore = create<SessionStore>()(
 
           const newSession: ISession = {
             ...sessionData,
+            password: encrypt(sessionData.password),
+            passphrase: encrypt(sessionData.passphrase),
             id: crypto.randomUUID(),
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -103,6 +123,8 @@ const useSessionStore = create<SessionStore>()(
               state.sessions[sessionIndex] = {
                 ...state.sessions[sessionIndex],
                 ...updates,
+                password: updates.password ? encrypt(updates.password) : state.sessions[sessionIndex].password,
+                passphrase: updates.passphrase ? encrypt(updates.passphrase) : state.sessions[sessionIndex].passphrase,
                 updatedAt: new Date(),
               };
             }
@@ -244,15 +266,19 @@ const useSessionStore = create<SessionStore>()(
             console.log("Connecting to session:", sessionId);
             get().updateSessionStatus(sessionId, "connecting");
 
+            // Decrypt password and passphrase before sending to backend
+            const decryptedPassword = decrypt(session.password);
+            const decryptedPassphrase = decrypt(session.passphrase);
+
             // Call Rust backend to connect
             const connectionId = await invoke("connect_sftp", {
               config: {
                 host: session.host,
                 port: session.port,
                 username: session.username,
-                password: session.password,
+                password: decryptedPassword,
                 private_key_path: session.privateKeyPath,
-                passphrase: session.passphrase,
+                passphrase: decryptedPassphrase,
               },
             });
 

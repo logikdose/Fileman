@@ -24,7 +24,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar collapsible="offcanvas" {...props}>
             <SidebarHeader data-tauri-drag-region>
-                <div className="flex items-center gap-2 bg-muted/10 p-2 rounded-xl" data-tauri-drag-region>
+                <div className="flex items-center gap-2 bg-muted/10 rounded-xl" data-tauri-drag-region>
                     <img src={FilemanIcon} alt="Fileman" className="size-10" data-tauri-drag-region />
                     <span className="text-base text-muted-foreground" data-tauri-drag-region>Fileman</span>
                 </div>

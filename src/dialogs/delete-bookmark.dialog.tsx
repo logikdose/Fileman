@@ -9,10 +9,11 @@ type Props = {
     onOpenChange: (open: boolean) => void;
 
     bookmarkId: string;
+    bookmarkName: string;
 }
 
 
-export default function DeleteBookmarkDialog({ dialogOpen, onOpenChange, bookmarkId }: Props) {
+export default function DeleteBookmarkDialog({ dialogOpen, onOpenChange, bookmarkId, bookmarkName }: Props) {
 
     // State
     const [deletingBookmark, setDeletingBookmark] = useState(false);
@@ -24,11 +25,11 @@ export default function DeleteBookmarkDialog({ dialogOpen, onOpenChange, bookmar
         setDeletingBookmark(true);
         try {
             await deleteBookmark(bookmarkId);
-            toast.success(`Bookmark ${bookmarkId} deleted successfully`);
+            toast.success(`Bookmark ${bookmarkName} deleted successfully`);
             onOpenChange(false);
         } catch (error) {
             console.error("Error deleting bookmark:", error);
-            toast.error(`Failed to delete bookmark ${bookmarkId}`);
+            toast.error(`Failed to delete bookmark ${bookmarkName}`);
         } finally {
             setDeletingBookmark(false);
 

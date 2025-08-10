@@ -126,6 +126,7 @@ export default function Bookmarks() {
                         }
                     }}
                     bookmarkId={deleteBookmarkId}
+                    bookmarkName={bookmarks.find(b => b.id === deleteBookmarkId)?.name || "Bookmark"}
                 />
             )}
         </>
