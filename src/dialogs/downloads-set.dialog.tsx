@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { toast } from "sonner"
 import { open } from "@tauri-apps/plugin-dialog";
-import useProcessStore from "@/stores/process.store"
+import useConfigStore from "@/stores/config.store"
 
 type Props = {
     dialogOpen: boolean;
@@ -24,8 +24,8 @@ type Props = {
 
 export default function DownloadsSetDialog({ dialogOpen, onOpenChange, currentPath }: Props) {
     // Hooks
-    const downloadPath = useProcessStore((state) => state.downloadPath);
-    const setDownloadPath = useProcessStore((state) => state.setDownloadPath);
+    const downloadPath = useConfigStore((state) => state.downloadsPath);
+    const setDownloadPath = useConfigStore((state) => state.setDownloadsPath);
 
     // State
     const [folderName, setFolderName] = useState(downloadPath ? downloadPath : "");

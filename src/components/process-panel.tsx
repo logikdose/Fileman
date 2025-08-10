@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Bell } from "lucide-react";
 import useTabStore from "@/stores/tab.store";
 import { isSamePath } from "@/utils/file.util";
+import useConfigStore from "@/stores/config.store";
 
 export default function ProcessPanel() {
     // State
@@ -23,7 +24,7 @@ export default function ProcessPanel() {
     const processes = useProcessStore((state) => state.processes);
 
     // Store hooks
-    const autoClearSuccessNotifications = useProcessStore((state) => state.autoClearSuccess);
+    const autoClearSuccessNotifications = useConfigStore((state) => state.autoClearSuccessNotifications);
     const addProcess = useProcessStore((state) => state.addProcess);
     const updateProcess = useProcessStore((state) => state.updateProcess);
     const removeProcess = useProcessStore((state) => state.removeProcess);
@@ -108,7 +109,6 @@ export default function ProcessPanel() {
             }
 
             const directoryPath = path.split('/').slice(0, -1).join('/');
-            console.log("Directory path:", directoryPath);
             if (directoryPath) {
                 // Find tab with the directory path
                 const tabs = useTabStore.getState().tabs;

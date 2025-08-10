@@ -1,5 +1,4 @@
 import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from "@/components/ui/context-menu";
-import useProcessStore from "@/stores/process.store";
 import useSessionStore from "@/stores/session.store";
 import useTabStore from "@/stores/tab.store";
 import { FileItem } from "@/types/FileItem";
@@ -21,7 +20,7 @@ type Props = {
 
 export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile, onCopy, onCut }: Props) {
     // Store hooks
-    const downloadsPath = useProcessStore((state) => state.downloadPath);
+    const downloadsPath = useConfigStore((state) => state.downloadsPath);
     const tab = useTabStore((state) => state.getTabById(tabId));
     const tabSession = useSessionStore((state) => state.getSessionById(tab?.session?.id));
     const navigateToPath = useTabStore((state) => state.navigateToPath);
@@ -179,7 +178,16 @@ export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile, on
                                 onDoubleClick={(e) => handleDoubleClick(e, file)}
                             >
                                 {listViewSize === "compact" ? (
-                                    <ListViewCompact file={file} />
+                                    <ListViewCompact
+                                        file={file}
+                                        onToggleSelection={(file, checked) => {
+                                            if (checked) {
+                                                addFileToSelection(tab.id, file.path);
+                                            } else {
+                                                removeFileFromSelection(tab.id, file.path);
+                                            }
+                                        }}
+                                    />
                                 ) : (
                                     <ListViewComfortable file={file} />
                                 )}

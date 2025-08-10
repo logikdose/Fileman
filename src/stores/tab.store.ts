@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import ITab, { SortBy, SortOrder, TabType, ViewMode } from "../models/tab.model";
+import ITab, { SortBy, SortOrder, ViewMode } from "../models/tab.model";
 import ISession from "../models/session.model";
 import { FileItem } from "@/types/FileItem";
 import { invoke } from "@tauri-apps/api/core";
@@ -15,7 +15,7 @@ interface TabStore {
   nextIndex: number;
 
   // Tab management
-  createTab: (session?: ISession, filePath?: string, type?: TabType) => string;
+  createTab: (sessionId?: string, filePath?: string) => string;
   closeTab: (tabId: string) => void;
   closeAllTabs: () => void;
   closeOtherTabs: (keepTabId: string) => void;
@@ -108,7 +108,8 @@ const useTabStore = create<TabStore>()(
         nextIndex: 0,
 
         // Tab management
-        createTab: (session, filePath = "/", type = "browser") => {
+        createTab: (sessionId, filePath = "/") => {
+          const session = useSessionStore.getState().getSessionById(sessionId);
           const tabId = crypto.randomUUID();
           const now = new Date();
 
@@ -119,12 +120,12 @@ const useTabStore = create<TabStore>()(
               session,
               filePath,
               title: session ? `${session.name}` : "New Tab",
-              icon: type === "browser" ? "folder" : type === "editor" ? "file-text" : "terminal",
+              icon: "folder",
               isActive: false,
               isPinned: false,
               isDirty: false,
               isLoading: false,
-              type,
+              type: "browser",
               history: [filePath],
               historyIndex: 0,
               lastActivity: now,

@@ -2,7 +2,6 @@ import { FolderOpen, FolderPlus, X } from "lucide-react";
 import useTabStore from "@/stores/tab.store";
 import PathBar from "./path-bar";
 import ListView from "./file-viewer/list-view";
-import useSessionStore from "@/stores/session.store";
 import { useEffect, useState } from "react";
 import DeleteFilesDialog from "@/dialogs/delete-files.dialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -25,7 +24,6 @@ export default function FileBrowser() {
     const activeTabId = useTabStore((state) => state.activeTabId);
     const setActiveTab = useTabStore((state) => state.setActiveTab);
     const activeTab = useTabStore((state) => state.getTabById(activeTabId));
-    const sessions = useSessionStore((state) => state.sessions);
 
     // State
     const [deleteFiles, setDeleteFiles] = useState<string[]>([]);
@@ -45,16 +43,6 @@ export default function FileBrowser() {
     };
 
     const handleTabCreate = () => {
-        // Set session to active tab
-        if (sessions.length > 0) {
-            const firstSession = sessions[0];
-            const newTabId = createTab(firstSession, "/");
-            setActiveTab(newTabId);
-            useTabStore.getState().navigateToPath(newTabId, firstSession.id, "/");
-
-            return;
-        }
-
         createTab();
     };
 

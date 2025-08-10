@@ -9,3 +9,5 @@
 - Bookmarks delete dialog improved
 - Copy, Cut & Paste operations in sessions
 - Clipboard view in sidebar
+- Compact list view - checkbox selection
+- Tabs creation improved

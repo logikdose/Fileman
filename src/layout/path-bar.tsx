@@ -13,7 +13,7 @@ import { SettingsDialog } from "@/dialogs/settings.dialog";
 import CreateBookmarkDialog from "@/dialogs/create-bookmark.dialog";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import useProcessStore from "@/stores/process.store";
+import useConfigStore from "@/stores/config.store";
 
 export default function PathBar() {
     // Menu and Dialogs
@@ -24,7 +24,7 @@ export default function PathBar() {
     const [createBookmarkDialogOpen, setCreateBookmarkDialogOpen] = useState(false);
 
     // Store hooks
-    const downloadsPath = useProcessStore((state) => state.downloadPath);
+    const downloadsPath = useConfigStore((state) => state.downloadsPath);
     const tabId = useTabStore((state) => state.activeTabId);
     const tab = useTabStore((state) => state.getTabById(tabId));
     const session = useSessionStore((state) => state.getSessionById(tab?.session?.id));

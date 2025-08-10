@@ -5,6 +5,13 @@ import { immer } from "zustand/middleware/immer";
 interface ConfigStore {
     listViewSize: "compact" | "comfortable";
 
+    // Downloads
+    downloadsPath: string | null;
+    setDownloadsPath: (value: string | null) => void;
+
+    // Auto-clear success notifications
+    autoClearSuccessNotifications: boolean;
+
     // Clipboard
     showClipboard: boolean;
 
@@ -15,6 +22,7 @@ interface ConfigStore {
 
     // Methods
     setListViewSize: (size: "compact" | "comfortable") => void;
+    setAutoClearSuccessNotifications: (autoClear: boolean) => void;
     setShowClipboard: (show: boolean) => void;
     setShowBookmarks: (show: boolean) => void;
     setHighlightBookmarks: (highlight: boolean) => void;
@@ -26,11 +34,15 @@ const useConfigStore = create<ConfigStore>()(
         persist(
             immer((set) => ({
                 listViewSize: "comfortable", // Default view size
+                downloadsPath: null, // Default downloads path
                 showBookmarks: true, // Default bookmark visibility
                 highlightBookmarks: true, // Default highlight bookmarks
                 priorityBookmarks: true, // Default priority bookmarks
                 showClipboard: true, // Default clipboard visibility
+                autoClearSuccessNotifications: true, // Default auto-clear success notifications
                 setListViewSize: (size) => set({ listViewSize: size }),
+                setDownloadsPath: (path) => set({ downloadsPath: path }),
+                setAutoClearSuccessNotifications: (autoClear) => set({ autoClearSuccessNotifications: autoClear }),
                 setShowBookmarks: (show) => set({ showBookmarks: show }),
                 setHighlightBookmarks: (highlight) => set({ highlightBookmarks: highlight }),
                 setPriorityBookmarks: (priority) => set({ priorityBookmarks: priority }),
@@ -40,9 +52,12 @@ const useConfigStore = create<ConfigStore>()(
                 name: "configStore",
                 partialize: (state) => ({
                     listViewSize: state.listViewSize,
+                    downloadsPath: state.downloadsPath,
+                    showClipboard: state.showClipboard,
                     showBookmarks: state.showBookmarks,
                     highlightBookmarks: state.highlightBookmarks,
                     priorityBookmarks: state.priorityBookmarks,
+                    autoClearSuccessNotifications: state.autoClearSuccessNotifications,
                 })
             }
         )

@@ -53,7 +53,6 @@ import {
 import { useTheme } from "@/components/theme-provider"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import useProcessStore from "@/stores/process.store"
 import { openUrl } from '@tauri-apps/plugin-opener';
 import useConfigStore from "@/stores/config.store"
 
@@ -83,10 +82,10 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
     const [selectedTab, setSelectedTab] = React.useState(data.nav[0].id)
 
     // Bookmarks
-    const autoClearSuccessNotifications = useProcessStore((state) => state.autoClearSuccess);
-    const setAutoClearSuccessNotifications = useProcessStore((state) => state.setAutoClearSuccess);
-    const downloadsPath = useProcessStore((state) => state.downloadPath);
-    const setDownloadsPath = useProcessStore((state) => state.setDownloadPath);
+    const autoClearSuccessNotifications = useConfigStore((state) => state.autoClearSuccessNotifications);
+    const setAutoClearSuccessNotifications = useConfigStore((state) => state.setAutoClearSuccessNotifications);
+    const downloadsPath = useConfigStore((state) => state.downloadsPath);
+    const setDownloadsPath = useConfigStore((state) => state.setDownloadsPath);
     const showClipboard = useConfigStore((state) => state.showClipboard);
     const setShowClipboard = useConfigStore((state) => state.setShowClipboard);
     const showBookmarks = useConfigStore((state) => state.showBookmarks);
