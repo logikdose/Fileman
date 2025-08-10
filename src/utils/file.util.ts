@@ -20,6 +20,20 @@ export function bytesSizeToString(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
+export function fileExtensionFromName(fileName: string): string | undefined {
+  const parts = fileName.split(".");
+  return parts.length > 1 ? parts.pop() : undefined;
+}
+
+export function fileNameWithoutExtension(fileName: string): string | undefined {
+  const parts = fileName.split(".");
+  if (parts.length > 1) {
+    parts.pop();
+    return parts.join(".");
+  }
+  return fileName; // Return the original name if no extension is found
+}
+
 export function lastModifiedToString(timestamp: number): string {
   const date = new Date(timestamp);
   return date.toLocaleString();

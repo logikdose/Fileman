@@ -4,23 +4,12 @@ import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 interface BookmarkStore {
-
-    // Config
-    showBookmarks: boolean;
-    highlightBookmarks: boolean;
-    priorityBookmarks: boolean;
-
-    // State
     bookmarks: IBookmark[];
     addBookmark(name: string, path: string, sessionId: string): void;
     removeBookmark(id: string): void;
     getBookmarks(): IBookmark[];
     getBookmarksBySession(sessionId: string): IBookmark[];
     updateBookmark(id: string, updatedBookmark: Partial<IBookmark>): void;
-
-    setHighlightBookmarks: (highlight: boolean) => void;
-    setPriorityBookmarks: (priority: boolean) => void;
-    setShowBookmarks: (show: boolean) => void;
 }
 
 const useBookmarkStore = create<BookmarkStore>()(
@@ -71,15 +60,6 @@ const useBookmarkStore = create<BookmarkStore>()(
                             };
                         }
                     });
-                },
-                setShowBookmarks: (show: boolean) => {
-                    set({ showBookmarks: show });
-                },
-                setHighlightBookmarks: (highlight: boolean) => {
-                    set({ highlightBookmarks: highlight });
-                },
-                setPriorityBookmarks: (priority: boolean) => {
-                    set({ priorityBookmarks: priority });
                 }
             })
             ),

@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri",
-    "fileman-build": "bun tauri build && node copy-msi.js"
+    "tauri": "tauri"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.11",

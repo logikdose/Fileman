@@ -52,5 +52,5 @@ To start developing Fileman, you need to set up your environment. This includes 
 1. Run build command
 
    ```bash
-   npm run fileman-build
+   npm run tauri build
    ```

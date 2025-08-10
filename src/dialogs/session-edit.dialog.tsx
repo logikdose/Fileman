@@ -18,6 +18,7 @@ type Props = {
 
 export default function SessionEditDialog({ dialogOpen, onOpenChange, session }: Props) {
     // Store
+    const sessions = useSessionStore(state => state.sessions);
     const updateSession = useSessionStore(state => state.updateSession);
     const connectSession = useSessionStore(state => state.connectToSession);
 
@@ -68,10 +69,11 @@ export default function SessionEditDialog({ dialogOpen, onOpenChange, session }:
 
         // Connect to session
         connectSession(newSession).then((connected) => {
+            const sessionName = sessions.find(s => s.id === newSession)?.name || "Session";
             if (connected) {
-                toast.success(`Connected to session: ${newSession}`);
+                toast.success(`Connected to session: ${sessionName}`);
             } else {
-                toast.error(`Failed to connect to session: ${newSession}`);
+                toast.error(`Failed to connect to session: ${sessionName}`);
             }
         });
     }
@@ -188,39 +190,39 @@ export default function SessionEditDialog({ dialogOpen, onOpenChange, session }:
                             </TabsContent>
                             <TabsContent value="tab-2">
                                 <div className="flex rounded-md shadow-xs">
-                                            <Input
-                                                id={"private-key-path"}
-                                                className="-me-px flex-1 rounded-e-none shadow-none focus-visible:z-10"
-                                                placeholder="Private Key Path"
-                                                type="text"
-                                                value={privateKeyPath}
-                                                onChange={(e) => setPrivateKeyPath(e.target.value)}
-                                                autoFocus
-                                            />
-                                            <button
-                                                className="border-input bg-background text-foreground hover:bg-accent hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 inline-flex items-center rounded-e-md border px-3 text-sm font-medium transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
-                                                type="button"
-                                                onClick={async () => {
-                                                    const downloads = await open({
-                                                        multiple: false, // Set to true if you want to allow multiple file selection
-                                                        title: "Select Private Key",
-                                                        filters: [{
-                                                            name: "Files",
-                                                            extensions: [".pem", ".key", ".ppk"] // Allow specific file types
-                                                        },]
-                                                    });
+                                    <Input
+                                        id={"private-key-path"}
+                                        className="-me-px flex-1 rounded-e-none shadow-none focus-visible:z-10"
+                                        placeholder="Private Key Path"
+                                        type="text"
+                                        value={privateKeyPath}
+                                        onChange={(e) => setPrivateKeyPath(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button
+                                        className="border-input bg-background text-foreground hover:bg-accent hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 inline-flex items-center rounded-e-md border px-3 text-sm font-medium transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+                                        type="button"
+                                        onClick={async () => {
+                                            const downloads = await open({
+                                                multiple: false, // Set to true if you want to allow multiple file selection
+                                                title: "Select Private Key",
+                                                filters: [{
+                                                    name: "Files",
+                                                    extensions: [".pem", ".key", ".ppk"] // Allow specific file types
+                                                },]
+                                            });
 
-                                                    if (downloads && typeof downloads === "string") {
-                                                        setPrivateKeyPath(downloads);
-                                                    } else {
-                                                        toast.error("No folder selected");
-                                                    }
-                                                }}
-                                            >
-                                                <KeyIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                <span className="sr-only">Set Private Key Path</span>
-                                            </button>
-                                        </div>
+                                            if (downloads && typeof downloads === "string") {
+                                                setPrivateKeyPath(downloads);
+                                            } else {
+                                                toast.error("No folder selected");
+                                            }
+                                        }}
+                                    >
+                                        <KeyIcon size={16} className="opacity-60" aria-hidden="true" />
+                                        <span className="sr-only">Set Private Key Path</span>
+                                    </button>
+                                </div>
                                 <div className="mt-2">
                                     <Input
                                         id={`passphrase`}

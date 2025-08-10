@@ -38,6 +38,7 @@ export default function PathBar() {
     const uploadFile = useSessionStore((state) => state.uploadFile);
     const downloadFile = useSessionStore((state) => state.downloadFile);
     const closeTab = useTabStore((state) => state.closeTab);
+    const selectFile = useTabStore((state) => state.selectFile);
 
     // Handlers
     const handlePathChange = async (newPath: string) => {
@@ -195,6 +196,62 @@ export default function PathBar() {
         e.preventDefault();
         closeActiveTab();
     });
+    useHotkeys("ArrowUp", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!tab || !tab.files || tab.files.length === 0) {
+            console.log("No files available");
+            return;
+        }
+
+        // Current selection first item
+        const selectedFiles = tab?.selectedFiles || [];
+        if (selectedFiles.length === 0) {
+            console.log("No file selected");
+            selectFile(tab.id, tab.files?.[0]?.path || "");
+            return;
+        }
+
+        const firstSelectedFile = selectedFiles[0];
+        const firstSelectedIndex = tab?.files?.findIndex(file => file.path === firstSelectedFile);
+
+        if (firstSelectedIndex === -1 || firstSelectedIndex === undefined) {
+            console.log("No more files above");
+            return;
+        }
+        const newIndex = firstSelectedIndex - 1;
+        if (newIndex < 0) {
+            console.log("No more files above");
+            return;
+        }
+
+        const newFile = tab?.files?.[newIndex];
+        if (!newFile) {
+            console.log("No more files above");
+            return;
+        }
+        selectFile(tab.id, newFile.path);
+    });
+    useHotkeys("ArrowDown", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (!tab) return;
+
+        // Current selection first item
+        const selectedFiles = tab?.selectedFiles || [];
+        if (selectedFiles.length === 0) return;
+
+        const lastSelectedFile = selectedFiles[selectedFiles.length - 1];
+        const lastSelectedIndex = tab?.files?.findIndex(file => file.path === lastSelectedFile);
+        if (lastSelectedIndex === -1 || lastSelectedIndex === undefined) return;
+        const newIndex = lastSelectedIndex + 1;
+        if (newIndex >= (tab?.files?.length || 0)) return;
+
+        const newFile = tab?.files?.[newIndex];
+        if (!newFile) return;
+        selectFile(tab.id, newFile.path);
+    });
 
     // Render
     return (
@@ -315,10 +372,11 @@ export default function PathBar() {
                             size="xsm"
                             onClick={async () => {
                                 const connected = await useSessionStore.getState().connectToSession(session.id);
+                                const sessionName = useSessionStore.getState().getSessionById(session.id)?.name || "Session";
                                 if (connected) {
-                                    toast.success(`Connected to session ${session.id}`);
+                                    toast.success(`Connected to session ${sessionName}`);
                                 } else {
-                                    toast.error(`Failed to connect to session ${session.id}`);
+                                    toast.error(`Failed to connect to session ${sessionName}`);
                                 }
                             }}
                         >
@@ -332,7 +390,7 @@ export default function PathBar() {
             <div className="inline-flex -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
                 <Button
                     size="sm"
-                    className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
+                    className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10 pr-2"
                     variant="outline"
                     disabled={!tab?.session || tab.selectedFiles.length !== 1 || tab?.files?.find(f => f.path === tab.selectedFiles[0])?.is_directory}
                     onClick={() => {
@@ -340,7 +398,6 @@ export default function PathBar() {
                     }}
                 >
                     <Download className="-ms-1 opacity-60" size={16} aria-hidden="true" />
-                    Download
                 </Button>
                 <Button
                     size="sm"

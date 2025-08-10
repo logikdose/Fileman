@@ -1,4 +1,6 @@
+import { Button } from "@/components/ui/button";
 import SessionSelectionMenu from "@/dialogs/session-selection.menu";
+import useConfigStore from "@/stores/config.store";
 import useSessionStore from "@/stores/session.store";
 import useTabStore from "@/stores/tab.store";
 import { useState } from "react";
@@ -11,10 +13,12 @@ export default function Footer() {
     const activeTabId = useTabStore((state) => state.activeTabId);
     const activeTab = useTabStore((state) => state.getTabById(activeTabId));
     const activeTabSession = useSessionStore((state) => state.getSessionById(activeTab?.session?.id));
+    const listViewSize = useConfigStore((state) => state.listViewSize);
+    const setListViewSize = useConfigStore((state) => state.setListViewSize);
 
     // Render
     return (
-        <footer className="h-12 border-t bg-background flex items-center px-4 text-xs text-muted-foreground rounded-b-xl">
+        <footer className="h-12 border-t bg-background flex items-center px-2 text-xs text-muted-foreground rounded-b-xl">
             {/* Session */}
             {activeTab && activeTabSession && (
                 <SessionSelectionMenu
@@ -47,6 +51,15 @@ export default function Footer() {
                     Total Files: {activeTab.files?.length || 0}
                 </span>
             )}
+
+            <Button
+                size="sm"
+                variant="outline"
+                className="ml-auto"
+                onClick={() => setListViewSize(listViewSize === 'compact' ? 'comfortable' : 'compact')}
+            >
+                {listViewSize === 'compact' ? 'Compact' : 'Comfortable'}
+            </Button>
         </footer>
     );
 }

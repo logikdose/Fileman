@@ -59,7 +59,7 @@ interface TabStore {
   removeFileFromSelection: (tabId: string, filePath: string) => void;
   removeFilesFromSelection: (tabId: string, filePaths: string[]) => void;
   selectAllFiles: (tabId: string, files: string[]) => void;
-  clearSelection: (tabId: string) => void;
+  clearSelection: (tabId?: string) => void;
   setViewMode: (tabId: string, mode: ViewMode) => void;
   setSorting: (tabId: string, sortBy: SortBy, sortOrder: SortOrder) => void;
   setFilter: (tabId: string, query: string) => void;
@@ -645,6 +645,11 @@ const useTabStore = create<TabStore>()(
         },
 
         clearSelection: (tabId) => {
+          if (!tabId) {
+            tabId = get().activeTabId;
+            get().clearSelection(tabId);
+            return;
+          }
           get().setSelectedFiles(tabId, []);
         },
 
