@@ -332,7 +332,7 @@ export default function PathBar() {
                 <Input
                     size="sm"
                     type="text"
-                    value={tab?.filePath}
+                    value={tab?.filePath || ""}
                     onChange={(e) => {
                         const newPath = e.target.value;
                         handlePathChange(newPath);

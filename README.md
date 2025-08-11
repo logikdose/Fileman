@@ -2,6 +2,9 @@
 
 Fileman is a modern file manager application built with Tauri and React. It provides a user-friendly interface for managing files and directories on your SFTP server, with features like file upload, download, and directory navigation.
 
+![Download Latest Release](https://img.shields.io/github/downloads/logikdose/fileman/latest/total)
+
+
 ![Fileman Screenshot](./public/fileman-screenshot.png)
 
 ## Features
@@ -46,6 +49,14 @@ To start developing Fileman, you need to set up your environment. This includes 
 
 5. Wait for the application to start. It will open in a new window.
 
+## Tauri plugins not installed?
+
+Run this command to install all tauri dependencies.
+
+   ```bash
+   cd src-tauri
+   cargo update
+   ```
 
 ## Build
 

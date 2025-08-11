@@ -45,37 +45,47 @@ export default function SessionEditDialog({ dialogOpen, onOpenChange, session }:
 
         // Create session object
         const updatedSession = {
+            id: session.id,
             name: name,
             host,
             port: parseInt(port, 10),
             username,
-            password: password || undefined,
-            privateKeyPath: privateKeyPath || undefined,
-            passphrase: passphrase || undefined,
+            password: password === "" ? undefined : password,
+            privateKeyPath: privateKeyPath === "" ? undefined : privateKeyPath,
+            passphrase: passphrase === "" ? undefined : passphrase,
             status: "disconnected",
-        } as Omit<ISession, "id" | "createdAt" | "updatedAt" | "lastUsedAt">;
+            createdAt: session.createdAt,
+            updatedAt: new Date(),
+            lastUsedAt: session.lastUsedAt || undefined,
+        } as ISession;
+        console.log(updatedSession);
 
         // Save session to store (this would be replaced with actual store logic)
-        const newSession = updateSession(session.id, updatedSession);
-        if (!newSession) {
-            toast.error("Failed to add session. Please try again.");
-            return;
-        }
-
-        toast.success(`Session "${session.name}" added successfully!`);
-
-        // Close dialog
-        onOpenChange(false);
-
-        // Connect to session
-        connectSession(newSession).then((connected) => {
-            const sessionName = sessions.find(s => s.id === newSession)?.name || "Session";
-            if (connected) {
-                toast.success(`Connected to session: ${sessionName}`);
-            } else {
-                toast.error(`Failed to connect to session: ${sessionName}`);
+        try {
+            const newSession = updateSession(updatedSession);
+            if (!newSession) {
+                toast.error("Failed to add session. Please try again.");
+                return;
             }
-        });
+
+            toast.success(`Session "${session.name}" added successfully!`);
+
+            // Close dialog
+            onOpenChange(false);
+
+            // Connect to session
+            connectSession(newSession).then((connected) => {
+                const sessionName = sessions.find(s => s.id === newSession)?.name || "Session";
+                if (connected) {
+                    toast.success(`Connected to session: ${sessionName}`);
+                } else {
+                    toast.error(`Failed to connect to session: ${sessionName}`);
+                }
+            });
+        } catch (error) {
+            console.error("Error updating session:", error);
+            toast.error("Failed to update session");
+        }
     }
 
     useEffect(() => {

@@ -4,11 +4,8 @@ import {
     SidebarProvider,
 } from "@/components/ui/sidebar"
 import FileBrowser from "@/layout/file-browser"
-import useTabStore from "@/stores/tab.store"
 
 export default function Layout() {
-    const clearSelection = useTabStore((state) => state.clearSelection)
-
     // Render
     return (
         <SidebarProvider
@@ -19,12 +16,7 @@ export default function Layout() {
                 } as React.CSSProperties
             }
         >
-            <AppSidebar
-                variant="inset"
-                onClick={() => {
-                    clearSelection()
-                }}
-            />
+            <AppSidebar variant="inset" />
             <SidebarInset className="flex-1 w-0 h-[97vh] max-h-[97vh] overflow-hidden">
                 <FileBrowser />
             </SidebarInset>

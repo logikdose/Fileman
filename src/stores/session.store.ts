@@ -21,7 +21,7 @@ interface SessionStore {
 
   // Session CRUD operations
   addSession: (session: Omit<ISession, "id" | "createdAt" | "updatedAt">) => string | undefined;
-  updateSession: (id: string, updates: Partial<ISession>) => string | undefined;
+  updateSession: (update: ISession) => string | undefined;
   deleteSession: (id: string) => Promise<boolean>;
   duplicateSession: (id: string) => void;
   toggleFavorite: (id: string) => void;
@@ -116,27 +116,35 @@ const useSessionStore = create<SessionStore>()(
           return newSession.id; // Session added successfully
         },
 
-        updateSession: (id, updates) => {
+        updateSession: (update) => {
           set((state) => {
-            const sessionIndex = state.sessions.findIndex((s) => s.id === id);
+            const sessionIndex = state.sessions.findIndex((s) => s.id === update.id);
             if (sessionIndex !== -1) {
-              state.sessions[sessionIndex] = {
-                ...state.sessions[sessionIndex],
-                ...updates,
-                password: updates.password ? encrypt(updates.password) : state.sessions[sessionIndex].password,
-                passphrase: updates.passphrase ? encrypt(updates.passphrase) : state.sessions[sessionIndex].passphrase,
+              const updatedSession = {
+                id: update.id,
+                name: update.name,
+                host: update.host,
+                port: update.port,
+                username: update.username,
+                password: update.password ? encrypt(update.password) : undefined,
+                privateKeyPath: update.privateKeyPath ? update.privateKeyPath : undefined,
+                passphrase: update.passphrase ? encrypt(update.passphrase) : undefined,
+                createdAt: state.sessions[sessionIndex].createdAt,
+                lastUsedAt: state.sessions[sessionIndex].lastUsedAt,
                 updatedAt: new Date(),
-              };
+              } as ISession;
+              state.sessions[sessionIndex] = updatedSession;
             }
           });
 
           // Return the updated session ID
-          const updatedSession = get().getSessionById(id);
+          const updatedSession = get().getSessionById(update.id);
           if (updatedSession) {
             return updatedSession.id;
           } else {
+            console.warn(`Session with ID ${update.id} not found.`);
             set((state) => {
-              state.error = `Session with ID ${id} not found.`;
+              state.error = `Session with ID ${update.id} not found.`;
             });
             return undefined; // Session not found
           }
@@ -144,14 +152,10 @@ const useSessionStore = create<SessionStore>()(
 
         deleteSession: async (id) => {
           try {
-            console.log("Deleting session:", id);
-
             const session = get().sessions.find((s) => s.id === id);
-            console.log("Session to delete:", session);
 
             // Disconnect if connected
             if (session?.status === "connected") {
-              console.log("Disconnecting session before deletion:", id);
               try {
                 const connectionState = get().activeSessions.get(id);
                 if (connectionState?.connectionId) {
@@ -231,8 +235,6 @@ const useSessionStore = create<SessionStore>()(
               session.status = status;
               session.updatedAt = new Date();
             }
-
-            console.log(`Session ${id} status updated to ${status}`); // Debug log
           });
         },
 
@@ -263,7 +265,6 @@ const useSessionStore = create<SessionStore>()(
 
           try {
             // Update status to connecting
-            console.log("Connecting to session:", sessionId);
             get().updateSessionStatus(sessionId, "connecting");
 
             // Decrypt password and passphrase before sending to backend
@@ -545,9 +546,6 @@ const useSessionStore = create<SessionStore>()(
               connectionId: connectionState.connectionId,
               path,
             });
-
-            console.log("Fetched directory size:", operationId);
-
             return operationId;
           } catch (error) {
             console.error("Fetch directory size failed:", error);
