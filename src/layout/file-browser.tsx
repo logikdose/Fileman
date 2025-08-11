@@ -68,6 +68,7 @@ export default function FileBrowser() {
                 action: type,
                 file: currentFile,
                 sessionId: activeTab?.session?.id,
+                status: "pending",
             } as IClipboardItem;
 
             // Add to clipboard store
@@ -104,10 +105,10 @@ export default function FileBrowser() {
         setInfoDialogFile(file);
     });
 
-    useHotkeys("meta+c, ctrl+c", (event) => {
-        event.preventDefault();
-        handleClipboardAction("copy");
-    });
+    // useHotkeys("meta+c, ctrl+c", (event) => {
+    //     event.preventDefault();
+    //     handleClipboardAction("copy");
+    // });
 
     useHotkeys("meta+x, ctrl+x", (event) => {
         event.preventDefault();

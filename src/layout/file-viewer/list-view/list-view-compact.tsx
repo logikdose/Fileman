@@ -14,6 +14,8 @@ export default function ListViewCompact({ file, onToggleSelection }: Props) {
     const tab = useTabStore((state) => state.getTabById(state.activeTabId));
     const clipboardItems = useClipboardStore((state) => state.items);
 
+    const clipboardItem = clipboardItems.find(item => item.file.path === file.path && item.sessionId === tab?.session?.id);
+
     // Render
     return (
         <div
@@ -50,7 +52,7 @@ export default function ListViewCompact({ file, onToggleSelection }: Props) {
             </div>
             <span className={
                 "flex-1 flex items-center gap-2 "
-                + (clipboardItems.find(item => item.file.path === file.path && item.sessionId === tab?.session?.id && item.action === "cut") ? "opacity-30" : "")
+                + (clipboardItem?.action === "cut" ? "opacity-30" : "")
             }>
                 {file.is_directory ? (
                     file.name === '..' ? (
@@ -63,9 +65,9 @@ export default function ListViewCompact({ file, onToggleSelection }: Props) {
                 )}
                 {file.name}
             </span>
-            {clipboardItems.find(item => item.file.path === file.path && item.sessionId === tab?.session?.id) && (
+            {(clipboardItem && clipboardItem.status === "pending") && (
                 <span className="text-xs text-muted-foreground">
-                    {clipboardItems.find(item => item.file.path === file.path && item.sessionId === tab?.session?.id)?.action === "cut" ? <Scissors className="size-3" /> : <Copy className="size-3" />}
+                    {clipboardItem.action === "cut" ? <Scissors className="size-3" /> : <Copy className="size-3" />}
                 </span>
             )}
             <span

@@ -77,6 +77,29 @@ export default function ProcessPanel() {
             }
         });
 
+        const unlistenCopyProgress = listen<Process>("copy_progress", (event) => {
+            const { connection_id, path, transferred, total, transfer_id, type } = event.payload;
+            const latestProcesses = useProcessStore.getState().processes;
+            const existingProcess = latestProcesses.find(p => p.transfer_id === transfer_id);
+
+            if (existingProcess) {
+                updateProcess(transfer_id, { transferred, total, status: "active", type, path, connection_id });
+            } else {
+                addProcess({
+                    connection_id,
+                    path,
+                    transferred,
+                    total,
+                    transfer_id,
+                    status: "active",
+                    type,
+                } as Process);
+
+                // Show process panel
+                setShowPanel(true);
+            }
+        });
+
         // Listen for transfer cancellation
         const unlistenCancel = listen<{ transfer_id: string; type: string }>("transfer_cancelled", (event) => {
             const { transfer_id } = event.payload;
@@ -113,7 +136,6 @@ export default function ProcessPanel() {
                 // Find tab with the directory path
                 const tabs = useTabStore.getState().tabs;
                 const tabsToUpdate = tabs.filter(tab => isSamePath(tab.filePath || "/", directoryPath));
-                console.log("Tabs to update:", tabsToUpdate.length);
                 for (const tab of tabsToUpdate) {
                     // Update the tab's file path to the directory path
                     useTabStore.getState().navigateToPath(tab.id, tab.session?.id, directoryPath);
@@ -126,6 +148,7 @@ export default function ProcessPanel() {
             unlistenDownload.then(unsub => unsub());
             unlistenCancel.then(unsub => unsub());
             unlistenComplete.then(unsub => unsub());
+            unlistenCopyProgress.then(unsub => unsub());
         };
     }, []);
 

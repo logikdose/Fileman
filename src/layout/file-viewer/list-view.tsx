@@ -2,7 +2,7 @@ import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, Con
 import useSessionStore from "@/stores/session.store";
 import useTabStore from "@/stores/tab.store";
 import { FileItem } from "@/types/FileItem";
-import { Copy, Download, FormInput, Info, Rows3, Scissors, TrashIcon } from "lucide-react";
+import { Download, FormInput, Info, Rows3, Scissors, TrashIcon } from "lucide-react";
 import { toast } from "sonner";
 import ListViewCompact from "./list-view/list-view-compact";
 import useConfigStore from "@/stores/config.store";
@@ -18,7 +18,7 @@ type Props = {
     onCut: () => void;
 }
 
-export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile, onCopy, onCut }: Props) {
+export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile, onCut }: Props) {
     // Store hooks
     const downloadsPath = useConfigStore((state) => state.downloadsPath);
     const tab = useTabStore((state) => state.getTabById(tabId));
@@ -252,7 +252,7 @@ export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile, on
                                 <ContextMenuShortcut>⌘R</ContextMenuShortcut>
                             </ContextMenuItem>
                             <ContextMenuSeparator />
-                            <ContextMenuItem
+                            {/* <ContextMenuItem
                                 inset
                                 variant="default"
                                 onClick={() => {
@@ -262,7 +262,7 @@ export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile, on
                                 <Copy size={16} aria-hidden="true" />
                                 <span>Copy</span>
                                 <ContextMenuShortcut>⌘C</ContextMenuShortcut>
-                            </ContextMenuItem>
+                            </ContextMenuItem> */}
                             <ContextMenuItem
                                 inset
                                 variant="default"

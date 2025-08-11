@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useSessionStore from "@/stores/session.store";
 import useTabStore from "@/stores/tab.store";
-import { ArrowLeft, ArrowRight, Download, EllipsisIcon, FolderPlus, FolderUp, Loader2, RefreshCcw, UploadCloud } from "lucide-react";
+import { ArrowLeft, ArrowRight, ClipboardIcon, Download, EllipsisIcon, FolderPlus, FolderUp, Loader2, RefreshCcw, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import CreateFolderDialog from "@/dialogs/create-folder.dialog";
 import { toast } from "sonner";
@@ -14,6 +14,8 @@ import CreateBookmarkDialog from "@/dialogs/create-bookmark.dialog";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import useConfigStore from "@/stores/config.store";
+import useClipboardStore from "@/stores/clipboard.store";
+import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 
 export default function PathBar() {
     // Menu and Dialogs
@@ -39,6 +41,11 @@ export default function PathBar() {
     const downloadFile = useSessionStore((state) => state.downloadFile);
     const closeTab = useTabStore((state) => state.closeTab);
     const selectFile = useTabStore((state) => state.selectFile);
+    const pasteClipboardItems = useClipboardStore((state) => state.paste);
+
+    // Current session clipboard
+    const clipboardItems = useClipboardStore((state) => state.items);
+    const currentSessionClipboard = clipboardItems.filter(item => item.sessionId === tab?.session?.id);
 
     // Handlers
     const handlePathChange = async (newPath: string) => {
@@ -174,6 +181,28 @@ export default function PathBar() {
         closeTab(tabId);
     }
 
+    const onPasteClipboardItems = async () => {
+        if (currentSessionClipboard.length > 0) {
+            const sessionId = tab?.session?.id;
+            const path = tab?.filePath;
+            if (!sessionId || !path) {
+                toast.error("No session or path specified");
+                return;
+            }
+
+            await pasteClipboardItems(sessionId, path);
+
+            // Refresh tab
+            if (!tabId || !tab || !tab.filePath) {
+                toast.error("No file path specified");
+                return;
+            }
+
+            // Refresh the current path
+            navigateToPath(tabId, session?.id, tab.filePath);
+        }
+    }
+
     // Hotkeys
     useHotkeys("meta+d, ctrl+d", (e) => {
         e.preventDefault();
@@ -195,6 +224,10 @@ export default function PathBar() {
     useHotkeys("meta+w, ctrl+w", (e) => {
         e.preventDefault();
         closeActiveTab();
+    });
+    useHotkeys("meta+v, ctrl+v", (e) => {
+        e.preventDefault();
+        onPasteClipboardItems();
     });
     useHotkeys("ArrowUp", (e) => {
         e.stopPropagation();
@@ -449,6 +482,19 @@ export default function PathBar() {
                                 <FolderPlus size={16} className="opacity-60" aria-hidden="true" />
                                 <span>Bookmark</span>
                                 <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem
+                                disabled={currentSessionClipboard.length < 1}
+                                onClick={() => {
+                                    onPasteClipboardItems();
+                                }}
+                            >
+                                <ClipboardIcon size={16} className="opacity-60" aria-hidden="true" />
+                                <span>Paste</span>
+                                <DropdownMenuShortcut>⌘V</DropdownMenuShortcut>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                     </DropdownMenuContent>

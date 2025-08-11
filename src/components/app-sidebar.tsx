@@ -119,7 +119,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         )}
                                     </span>
                                     <span className="text-xs flex-1">{item.file.name}</span>
-                                    <span className="text-xs bg-muted rounded-lg px-2 py-0.5 text-muted-foreground">{item.action}</span>
+                                    <span className="text-xs bg-muted rounded-lg px-2 py-0.5 text-muted-foreground">
+                                        {item.status === "pending" ? item.action : item.status}
+                                    </span>
                                 </div>
                             ))}
 

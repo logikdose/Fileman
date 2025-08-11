@@ -7,7 +7,10 @@
 - Files Context Menu improvements
 - Builds excluded
 - Bookmarks delete dialog improved
-- Copy, Cut & Paste operations in sessions
+- Cut & Paste operations in sessions
 - Clipboard view in sidebar
 - Compact list view - checkbox selection
 - Tabs creation improved
+
+
+Copy-data is not supported in `sftp2`. Need to migrate to `openssh-sftp-client`.

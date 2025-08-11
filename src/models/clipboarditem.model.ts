@@ -5,4 +5,5 @@ export default interface IClipboardItem {
     file: FileItem;
     sessionId: string;
     action: "copy" | "cut";
+    status: "pending" | "success" | "error";
 }

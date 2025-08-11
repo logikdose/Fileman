@@ -34,18 +34,6 @@ pub async fn list_directory(
 
     let mut files = Vec::new();
 
-    // Add parent directory entry if not root
-    // if path != "/" {
-    //     files.push(FileItem {
-    //         name: "..".to_string(),
-    //         path: get_parent_path(&path),
-    //         is_directory: true,
-    //         size: 0,
-    //         modified: 0,
-    //         permissions: "drwxr-xr-x".to_string(),
-    //     });
-    // }
-
     let dir_path = Path::new(&path);
     let entries = sftp
         .readdir(dir_path)

@@ -30,6 +30,8 @@ fn main() {
             fetch_storage_info,
             cancel_transfer,
             get_active_transfers,
+            copy_item,
+            move_item,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
