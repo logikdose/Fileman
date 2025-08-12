@@ -6,6 +6,7 @@ import {
 import FileBrowser from "@/layout/file-browser"
 
 export default function Layout() {
+    // Render
     return (
         <SidebarProvider
             style={

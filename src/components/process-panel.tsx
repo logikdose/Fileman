@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Bell } from "lucide-react";
 import useTabStore from "@/stores/tab.store";
 import { isSamePath } from "@/utils/file.util";
+import useConfigStore from "@/stores/config.store";
 
 export default function ProcessPanel() {
     // State
@@ -23,7 +24,7 @@ export default function ProcessPanel() {
     const processes = useProcessStore((state) => state.processes);
 
     // Store hooks
-    const autoClearSuccessNotifications = useProcessStore((state) => state.autoClearSuccess);
+    const autoClearSuccessNotifications = useConfigStore((state) => state.autoClearSuccessNotifications);
     const addProcess = useProcessStore((state) => state.addProcess);
     const updateProcess = useProcessStore((state) => state.updateProcess);
     const removeProcess = useProcessStore((state) => state.removeProcess);
@@ -54,6 +55,29 @@ export default function ProcessPanel() {
         });
 
         const unlistenDownload = listen<Process>("download_progress", (event) => {
+            const { connection_id, path, transferred, total, transfer_id, type } = event.payload;
+            const latestProcesses = useProcessStore.getState().processes;
+            const existingProcess = latestProcesses.find(p => p.transfer_id === transfer_id);
+
+            if (existingProcess) {
+                updateProcess(transfer_id, { transferred, total, status: "active", type, path, connection_id });
+            } else {
+                addProcess({
+                    connection_id,
+                    path,
+                    transferred,
+                    total,
+                    transfer_id,
+                    status: "active",
+                    type,
+                } as Process);
+
+                // Show process panel
+                setShowPanel(true);
+            }
+        });
+
+        const unlistenCopyProgress = listen<Process>("copy_progress", (event) => {
             const { connection_id, path, transferred, total, transfer_id, type } = event.payload;
             const latestProcesses = useProcessStore.getState().processes;
             const existingProcess = latestProcesses.find(p => p.transfer_id === transfer_id);
@@ -108,12 +132,10 @@ export default function ProcessPanel() {
             }
 
             const directoryPath = path.split('/').slice(0, -1).join('/');
-            console.log("Directory path:", directoryPath);
             if (directoryPath) {
                 // Find tab with the directory path
                 const tabs = useTabStore.getState().tabs;
                 const tabsToUpdate = tabs.filter(tab => isSamePath(tab.filePath || "/", directoryPath));
-                console.log("Tabs to update:", tabsToUpdate.length);
                 for (const tab of tabsToUpdate) {
                     // Update the tab's file path to the directory path
                     useTabStore.getState().navigateToPath(tab.id, tab.session?.id, directoryPath);
@@ -126,6 +148,7 @@ export default function ProcessPanel() {
             unlistenDownload.then(unsub => unsub());
             unlistenCancel.then(unsub => unsub());
             unlistenComplete.then(unsub => unsub());
+            unlistenCopyProgress.then(unsub => unsub());
         };
     }, []);
 

@@ -47,7 +47,7 @@ export default function SessionItem({ session }: Props) {
             useTabStore.getState().navigateToPath(activeTab.id, session.id, activeTab.filePath || "/");
         } else {
             // Create a new tab with the session
-            const newTabId = createTab(session, "/");
+            const newTabId = createTab(session.id, "/");
             setActiveTab(newTabId);
 
             // Navigate to the root path

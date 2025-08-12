@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import DeleteBookmarkDialog from "@/dialogs/delete-bookmark.dialog";
 import useBookmarkStore from "@/stores/bookmark.store";
+import useConfigStore from "@/stores/config.store";
 import useTabStore from "@/stores/tab.store";
 import { Folder } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -11,28 +12,28 @@ export default function Bookmarks() {
     const [deleteBookmarkId, setDeleteBookmarkId] = useState<string | null>(null);
 
     // Hooks
-    const highlightBookmarks = useBookmarkStore((state) => state.highlightBookmarks);
-    const priorityBookmarks = useBookmarkStore((state) => state.priorityBookmarks);
+    const highlightBookmarks = useConfigStore((state) => state.highlightBookmarks);
+    const priorityBookmarks = useConfigStore((state) => state.priorityBookmarks);
     const bookmarks = useBookmarkStore((state) => state.bookmarks);
     const activeTabId = useTabStore((state) => state.activeTabId);
     const activeTab = useTabStore((state) => state.getTabById(activeTabId));
     const navigateToPath = useTabStore((state) => state.navigateToPath);
+    const createTab = useTabStore((state) => state.createTab);
 
     const openBookmark = (bookmarkId: string) => {
         const bookmark = bookmarks.find(b => b.id === bookmarkId);
-
-        if (!activeTabId) {
-            toast.error("No active tab to open bookmark in.");
-            return;
-        }
-
         if (!bookmark) {
             toast.error("Bookmark not found.");
             return;
         }
 
+        let tabId = activeTabId;
+        if (!activeTabId) {
+            tabId = createTab(bookmark?.sessionId, bookmark?.path);
+        }
+
         // Navigate to the bookmark's path in the active tab
-        navigateToPath(activeTabId, bookmark.sessionId, bookmark.path);
+        navigateToPath(tabId!, bookmark.sessionId, bookmark.path);
     }
 
     // Sort bookmarks based on priority and session matching

@@ -15,10 +15,12 @@ import { Label } from "@/components/ui/label";
 type Props = {
     dialogOpen: boolean;
     onOpenChange: (open: boolean) => void;
+    trigger: React.ReactNode;
 }
 
-export default function SessionWizardDialog({ dialogOpen, onOpenChange }: Props) {
+export default function SessionWizardDialog({ dialogOpen, onOpenChange, trigger }: Props) {
     // Store
+    const sessions = useSessionStore((state) => state.sessions);
     const addSession = useSessionStore(state => state.addSession);
     const connectToSession = useSessionStore(state => state.connectToSession);
 
@@ -85,7 +87,8 @@ export default function SessionWizardDialog({ dialogOpen, onOpenChange }: Props)
         // Trigger connection
         connectToSession(newSession)
             .then(() => {
-                toast.success(`Connected to session: ${newSession}`);
+                const sessionName = sessions.find(s => s.id === newSession)?.name || "Session";
+                toast.success(`Connected to session: ${sessionName}`);
 
                 // Optionally, you can navigate to the session's default path or perform other actions
                 // For example, you might want to open a new tab in the file browser
@@ -100,12 +103,7 @@ export default function SessionWizardDialog({ dialogOpen, onOpenChange }: Props)
     return (
         <Dialog open={dialogOpen} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>
-                <Button
-                    variant="outline"
-                    className="bg-muted/50 hover:bg-muted/70 text-muted-foreground mt-4"
-                >
-                    New Session
-                </Button>
+                {trigger}
             </DialogTrigger>
             <DialogContent
                 onOpenAutoFocus={(e) => {

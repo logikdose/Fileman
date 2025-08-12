@@ -4,6 +4,7 @@ import * as React from "react"
 import {
     Bell,
     Computer,
+    Copy,
     FolderOpen,
     Github,
     Info,
@@ -52,19 +53,18 @@ import {
 import { useTheme } from "@/components/theme-provider"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import useBookmarkStore from "@/stores/bookmark.store"
-import useProcessStore from "@/stores/process.store"
 import { openUrl } from '@tauri-apps/plugin-opener';
+import useConfigStore from "@/stores/config.store"
 
 
 const data = {
     nav: [
-        // { id: "general", name: "General", icon: Settings },
+        { id: "files", name: "Files View", icon: FolderOpen },
         { id: "downloads", name: "Downloads", icon: FolderOpen },
+        { id: "clipboard", name: "Clipboard", icon: Copy },
         { id: "notifications", name: "Notifications", icon: Bell },
         { id: "bookmarks", name: "Bookmarks", icon: FolderOpen },
         { id: "appearance", name: "Appearance", icon: Paintbrush },
-        // { id: "documents", name: "Documents", icon: Lock },
         { id: "about", name: "About", icon: Info },
     ],
 }
@@ -83,16 +83,20 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
     const [selectedTab, setSelectedTab] = React.useState(data.nav[0].id)
 
     // Bookmarks
-    const autoClearSuccessNotifications = useProcessStore((state) => state.autoClearSuccess);
-    const setAutoClearSuccessNotifications = useProcessStore((state) => state.setAutoClearSuccess);
-    const downloadsPath = useProcessStore((state) => state.downloadPath);
-    const setDownloadsPath = useProcessStore((state) => state.setDownloadPath);
-    const showBookmarks = useBookmarkStore((state) => state.showBookmarks);
-    const setShowBookmarks = useBookmarkStore((state) => state.setShowBookmarks);
-    const highlightBookmarks = useBookmarkStore((state) => state.highlightBookmarks);
-    const setHighlightBookmarks = useBookmarkStore((state) => state.setHighlightBookmarks);
-    const priorityBookmarks = useBookmarkStore((state) => state.priorityBookmarks);
-    const setPriorityBookmarks = useBookmarkStore((state) => state.setPriorityBookmarks);
+    const listViewCheckbox = useConfigStore((state) => state.listViewCheckbox);
+    const setListViewCheckbox = useConfigStore((state) => state.setListViewCheckbox);
+    const autoClearSuccessNotifications = useConfigStore((state) => state.autoClearSuccessNotifications);
+    const setAutoClearSuccessNotifications = useConfigStore((state) => state.setAutoClearSuccessNotifications);
+    const downloadsPath = useConfigStore((state) => state.downloadsPath);
+    const setDownloadsPath = useConfigStore((state) => state.setDownloadsPath);
+    const showClipboard = useConfigStore((state) => state.showClipboard);
+    const setShowClipboard = useConfigStore((state) => state.setShowClipboard);
+    const showBookmarks = useConfigStore((state) => state.showBookmarks);
+    const setShowBookmarks = useConfigStore((state) => state.setShowBookmarks);
+    const highlightBookmarks = useConfigStore((state) => state.highlightBookmarks);
+    const setHighlightBookmarks = useConfigStore((state) => state.setHighlightBookmarks);
+    const priorityBookmarks = useConfigStore((state) => state.priorityBookmarks);
+    const setPriorityBookmarks = useConfigStore((state) => state.setPriorityBookmarks);
 
     React.useEffect(() => {
         // Fetch initial theme
@@ -157,6 +161,36 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                         </header>
                         <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pt-0">
                             <div className="border rounded-lg p-4 bg-muted shadow-sm h-full overflow-y-auto">
+                                {selectedTab === "files" && (
+                                    <>
+                                        <h2 className="text-lg">Files</h2>
+                                        <p className="text-sm text-muted-foreground">
+                                            Customize your file management experience.
+                                        </p>
+
+
+                                        <div className="mt-4 border-input has-data-[state=checked]:border-primary/50 relative flex w-full items-start gap-2 rounded-md border p-4 shadow-xs outline-none">
+                                            <Switch
+                                                id={"priority-bookmarks"}
+                                                className="order-1 h-4 w-6 after:absolute after:inset-0 [&_span]:size-3 data-[state=checked]:[&_span]:translate-x-2 data-[state=checked]:[&_span]:rtl:-translate-x-2"
+                                                aria-describedby={`priority-bookmarks-description`}
+                                                checked={listViewCheckbox}
+                                                onCheckedChange={(checked) => {
+                                                    setListViewCheckbox(checked);
+                                                }}
+                                            />
+                                            <div className="grid grow gap-2">
+                                                <Label htmlFor={"priority-bookmarks"}>
+                                                    List View Checkbox
+                                                </Label>
+                                                <p id={`priority-bookmarks-description`} className="text-muted-foreground text-xs">
+                                                    Show a checkbox in the list view for each item.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
                                 {selectedTab === "downloads" && (
                                     <>
                                         <h2 className="text-lg">Downloads</h2>
@@ -171,9 +205,6 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                                 placeholder="Downloads Path"
                                                 type="text"
                                                 value={downloadsPath ? downloadsPath : ""}
-                                                // onChange={(e) => {
-                                                //     setDownloadsPath(e.target.value);
-                                                // }}
                                                 autoFocus
                                             />
                                             <button
@@ -185,8 +216,6 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                                         directory: true, // Allow directory selection
                                                         title: "Select Downloads Directory",
                                                         defaultPath: downloadsPath || undefined,
-                                                        // You can add filters if needed, e.g.:
-                                                        //
                                                         filters: [{
                                                             name: "Folders",
                                                             extensions: ["*"] // Allow all folders
@@ -213,8 +242,6 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                         <p className="text-sm text-muted-foreground">
                                             Customize the look and feel of the application.
                                         </p>
-                                        {/* Add appearance settings here */}
-
                                         <Tabs defaultValue={savedTheme} value={savedTheme} className="mt-4">
                                             <ScrollArea>
                                                 <TabsList className="mb-3 mt-4 bg-background/50">
@@ -274,13 +301,33 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                     </>
                                 )}
 
-                                {selectedTab === "general" && (
+                                {selectedTab === "clipboard" && (
                                     <>
-                                        <h2 className="text-lg">General</h2>
+                                        <h2 className="text-lg">Clipboard</h2>
                                         <p className="text-sm text-muted-foreground">
-                                            General application settings.
+                                            Manage your clipboard settings.
                                         </p>
-                                        {/* Add general settings here */}
+
+                                        {/* Show Clipboard */}
+                                        <div className="mt-4 border-input has-data-[state=checked]:border-primary/50 relative flex w-full items-start gap-2 rounded-md border p-4 shadow-xs outline-none">
+                                            <Switch
+                                                id={"show-clipboard"}
+                                                className="order-1 h-4 w-6 after:absolute after:inset-0 [&_span]:size-3 data-[state=checked]:[&_span]:translate-x-2 data-[state=checked]:[&_span]:rtl:-translate-x-2"
+                                                aria-describedby={`show-clipboard-description`}
+                                                checked={showClipboard}
+                                                onCheckedChange={(checked) => {
+                                                    setShowClipboard(checked);
+                                                }}
+                                            />
+                                            <div className="grid grow gap-2">
+                                                <Label htmlFor={"show-clipboard"}>
+                                                    Show Clipboard
+                                                </Label>
+                                                <p id={`show-clipboard-description`} className="text-muted-foreground text-xs">
+                                                    Toggle to show or hide the clipboard from the sidebar.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </>
                                 )}
 
@@ -290,7 +337,6 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                         <p className="text-sm text-muted-foreground">
                                             Manage your bookmarks.
                                         </p>
-                                        {/* Add bookmarks settings here */}
 
                                         {/* Show Bookmarks */}
                                         <div className="mt-4 border-input has-data-[state=checked]:border-primary/50 relative flex w-full items-start gap-2 rounded-md border p-4 shadow-xs outline-none">
@@ -363,7 +409,6 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                                         <p className="text-sm text-muted-foreground">
                                             Manage your notification preferences.
                                         </p>
-                                        {/* Add notification settings here */}
 
                                         <div className="mt-4 border-input has-data-[state=checked]:border-primary/50 relative flex w-full items-start gap-2 rounded-md border p-4 shadow-xs outline-none">
                                             <Switch
@@ -396,7 +441,7 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
 
                                         <div className="mt-4 space-y-1">
                                             <p className="text-muted-foreground text-sm">
-                                                Version: <span className="font-semibold">1.0.1</span>
+                                                Version: <span className="font-semibold">1.0.2</span>
                                             </p>
                                             <Button className="mt-2" variant="outline" onClick={() => openUrl("https://github.com/logikdose/fileman")}>
                                                 Github <Github />

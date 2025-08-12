@@ -1,6 +1,6 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import useBookmarkStore from "@/stores/bookmark.store";
-import { CircleAlertIcon, Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -39,23 +39,23 @@ export default function DeleteBookmarkDialog({ dialogOpen, onOpenChange, bookmar
     // Render
     return (
         <AlertDialog open={dialogOpen} onOpenChange={onOpenChange}>
-            {/* <AlertDialogTrigger asChild>
-                <Button variant="outline">Alert dialog with icon</Button>
-            </AlertDialogTrigger> */}
             <AlertDialogContent>
                 <div className="flex flex-col gap-2 max-sm:items-center sm:flex-row sm:gap-4">
                     <div
-                        className="flex size-9 shrink-0 items-center justify-center rounded-full border"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full border bg-destructive"
                         aria-hidden="true"
                     >
-                        <CircleAlertIcon className="opacity-80" size={16} />
+                        <Trash2 className="opacity-80" size={16} />
                     </div>
                     <AlertDialogHeader>
                         <AlertDialogTitle>
-                            Confirm delete {bookmarkId} bookmark
+                            Confirm delete bookmark
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             Are you sure you want to delete this bookmark? This action cannot be undone.
+                            <div className="flex items-center justify-between border rounded-md mt-4 px-3 py-2">
+                                <span>{bookmarkName}</span>
+                            </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                 </div>
@@ -70,6 +70,7 @@ export default function DeleteBookmarkDialog({ dialogOpen, onOpenChange, bookmar
                         Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
+                        className="bg-destructive text-destructive-background hover:bg-destructive/90"
                         onClick={handleDeleteBookmark}
                         disabled={deletingBookmark}
                     >

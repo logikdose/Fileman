@@ -6,18 +6,12 @@ import { Toaster } from "./components/ui/sonner";
 import { useEffect } from "react";
 import useSessionStore from "./stores/session.store";
 
-
-
 function App() {
   enableMapSet();
 
   const disconnectAllSessions = useSessionStore((state) => state.disconnectAllSessions);
-
   useEffect(() => {
-    // Disconnect all sessions on unmount
-    return () => {
-      disconnectAllSessions();
-    };
+    disconnectAllSessions();
   }, []);
 
 

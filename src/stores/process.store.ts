@@ -4,12 +4,6 @@ import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 interface ProcessStore {
-  // Config
-  autoClearSuccess: boolean;
-  setAutoClearSuccess: (value: boolean) => void;
-  downloadPath: string | null;
-  setDownloadPath: (value: string | null) => void;
-
   // State
   processes: Process[];
   addProcess: (process: Process) => void;
@@ -21,11 +15,6 @@ const useProcessStore = create<ProcessStore>()(
   devtools(
     persist(
       immer((set, get) => ({
-        autoClearSuccess: false,
-        setAutoClearSuccess: (value: boolean) => set({ autoClearSuccess: value }),
-        downloadPath: null,
-        setDownloadPath: (value: string | null) => set({ downloadPath: value }),
-
         // State
         processes: [],
         addProcess: (process: Process) => {

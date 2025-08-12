@@ -18,6 +18,7 @@ type Props = {
 
 export default function SessionEditDialog({ dialogOpen, onOpenChange, session }: Props) {
     // Store
+    const sessions = useSessionStore(state => state.sessions);
     const updateSession = useSessionStore(state => state.updateSession);
     const connectSession = useSessionStore(state => state.connectToSession);
 
@@ -44,36 +45,47 @@ export default function SessionEditDialog({ dialogOpen, onOpenChange, session }:
 
         // Create session object
         const updatedSession = {
+            id: session.id,
             name: name,
             host,
             port: parseInt(port, 10),
             username,
-            password: password || undefined,
-            privateKeyPath: privateKeyPath || undefined,
-            passphrase: passphrase || undefined,
+            password: password === "" ? undefined : password,
+            privateKeyPath: privateKeyPath === "" ? undefined : privateKeyPath,
+            passphrase: passphrase === "" ? undefined : passphrase,
             status: "disconnected",
-        } as Omit<ISession, "id" | "createdAt" | "updatedAt" | "lastUsedAt">;
+            createdAt: session.createdAt,
+            updatedAt: new Date(),
+            lastUsedAt: session.lastUsedAt || undefined,
+        } as ISession;
+        console.log(updatedSession);
 
         // Save session to store (this would be replaced with actual store logic)
-        const newSession = updateSession(session.id, updatedSession);
-        if (!newSession) {
-            toast.error("Failed to add session. Please try again.");
-            return;
-        }
-
-        toast.success(`Session "${session.name}" added successfully!`);
-
-        // Close dialog
-        onOpenChange(false);
-
-        // Connect to session
-        connectSession(newSession).then((connected) => {
-            if (connected) {
-                toast.success(`Connected to session: ${newSession}`);
-            } else {
-                toast.error(`Failed to connect to session: ${newSession}`);
+        try {
+            const newSession = updateSession(updatedSession);
+            if (!newSession) {
+                toast.error("Failed to add session. Please try again.");
+                return;
             }
-        });
+
+            toast.success(`Session "${session.name}" added successfully!`);
+
+            // Close dialog
+            onOpenChange(false);
+
+            // Connect to session
+            connectSession(newSession).then((connected) => {
+                const sessionName = sessions.find(s => s.id === newSession)?.name || "Session";
+                if (connected) {
+                    toast.success(`Connected to session: ${sessionName}`);
+                } else {
+                    toast.error(`Failed to connect to session: ${sessionName}`);
+                }
+            });
+        } catch (error) {
+            console.error("Error updating session:", error);
+            toast.error("Failed to update session");
+        }
     }
 
     useEffect(() => {
@@ -188,39 +200,39 @@ export default function SessionEditDialog({ dialogOpen, onOpenChange, session }:
                             </TabsContent>
                             <TabsContent value="tab-2">
                                 <div className="flex rounded-md shadow-xs">
-                                            <Input
-                                                id={"private-key-path"}
-                                                className="-me-px flex-1 rounded-e-none shadow-none focus-visible:z-10"
-                                                placeholder="Private Key Path"
-                                                type="text"
-                                                value={privateKeyPath}
-                                                onChange={(e) => setPrivateKeyPath(e.target.value)}
-                                                autoFocus
-                                            />
-                                            <button
-                                                className="border-input bg-background text-foreground hover:bg-accent hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 inline-flex items-center rounded-e-md border px-3 text-sm font-medium transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
-                                                type="button"
-                                                onClick={async () => {
-                                                    const downloads = await open({
-                                                        multiple: false, // Set to true if you want to allow multiple file selection
-                                                        title: "Select Private Key",
-                                                        filters: [{
-                                                            name: "Files",
-                                                            extensions: [".pem", ".key", ".ppk"] // Allow specific file types
-                                                        },]
-                                                    });
+                                    <Input
+                                        id={"private-key-path"}
+                                        className="-me-px flex-1 rounded-e-none shadow-none focus-visible:z-10"
+                                        placeholder="Private Key Path"
+                                        type="text"
+                                        value={privateKeyPath}
+                                        onChange={(e) => setPrivateKeyPath(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button
+                                        className="border-input bg-background text-foreground hover:bg-accent hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 inline-flex items-center rounded-e-md border px-3 text-sm font-medium transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+                                        type="button"
+                                        onClick={async () => {
+                                            const downloads = await open({
+                                                multiple: false, // Set to true if you want to allow multiple file selection
+                                                title: "Select Private Key",
+                                                filters: [{
+                                                    name: "Files",
+                                                    extensions: [".pem", ".key", ".ppk"] // Allow specific file types
+                                                },]
+                                            });
 
-                                                    if (downloads && typeof downloads === "string") {
-                                                        setPrivateKeyPath(downloads);
-                                                    } else {
-                                                        toast.error("No folder selected");
-                                                    }
-                                                }}
-                                            >
-                                                <KeyIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                <span className="sr-only">Set Private Key Path</span>
-                                            </button>
-                                        </div>
+                                            if (downloads && typeof downloads === "string") {
+                                                setPrivateKeyPath(downloads);
+                                            } else {
+                                                toast.error("No folder selected");
+                                            }
+                                        }}
+                                    >
+                                        <KeyIcon size={16} className="opacity-60" aria-hidden="true" />
+                                        <span className="sr-only">Set Private Key Path</span>
+                                    </button>
+                                </div>
                                 <div className="mt-2">
                                     <Input
                                         id={`passphrase`}

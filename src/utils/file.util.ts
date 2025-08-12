@@ -20,6 +20,20 @@ export function bytesSizeToString(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
+export function fileExtensionFromName(fileName: string): string | undefined {
+  const parts = fileName.split(".");
+  return parts.length > 1 ? parts.pop() : undefined;
+}
+
+export function fileNameWithoutExtension(fileName: string): string | undefined {
+  const parts = fileName.split(".");
+  if (parts.length > 1) {
+    parts.pop();
+    return parts.join(".");
+  }
+  return fileName; // Return the original name if no extension is found
+}
+
 export function lastModifiedToString(timestamp: number): string {
   const date = new Date(timestamp);
   return date.toLocaleString();
@@ -52,4 +66,17 @@ export function isSamePath(pathOne: string, pathTwo: string): boolean {
   const normalizedPathTwo = pathTwo.replace(/\/+$/, "");
 
   return normalizedPathOne === normalizedPathTwo;
+}
+
+export function dateTimeFromTimestamp(timestamp: number): string {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  });
 }

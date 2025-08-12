@@ -1,22 +1,26 @@
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuTrigger } from "@/components/ui/context-menu";
-import useProcessStore from "@/stores/process.store";
+import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from "@/components/ui/context-menu";
 import useSessionStore from "@/stores/session.store";
 import useTabStore from "@/stores/tab.store";
 import { FileItem } from "@/types/FileItem";
-import { bytesSizeToString, getIconForFileType } from "@/utils/file.util";
-import { Download, FormInput, Info, Rows3, TrashIcon } from "lucide-react";
+import { Download, FormInput, Info, Rows3, Scissors, TrashIcon } from "lucide-react";
 import { toast } from "sonner";
+import ListViewCompact from "./list-view/list-view-compact";
+import useConfigStore from "@/stores/config.store";
+import ListViewComfortable from "./list-view/list-view-comfortable";
+import { fileNameWithoutExtension, getIconForFileType } from "@/utils/file.util";
 
 type Props = {
     tabId: string;
     onDelete: () => void;
     onFileInfo: (file: FileItem) => void;
     onRenameFile: (file: FileItem) => void;
+    onCopy: () => void;
+    onCut: () => void;
 }
 
-export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile }: Props) {
+export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile, onCut }: Props) {
     // Store hooks
-    const downloadsPath = useProcessStore((state) => state.downloadPath);
+    const downloadsPath = useConfigStore((state) => state.downloadsPath);
     const tab = useTabStore((state) => state.getTabById(tabId));
     const tabSession = useSessionStore((state) => state.getSessionById(tab?.session?.id));
     const navigateToPath = useTabStore((state) => state.navigateToPath);
@@ -26,13 +30,25 @@ export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile }: 
     const addFilesToSelection = useTabStore((state) => state.addFilesToSelection);
     const clearSelection = useTabStore((state) => state.clearSelection);
     const downloadFile = useSessionStore((state) => state.downloadFile);
+    const listViewSize = useConfigStore((state) => state.listViewSize);
 
     // Handlers
-    const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>, filePath: string) => {
+    const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>, file: FileItem) => {
         e.stopPropagation();
         e.preventDefault();
 
-        navigateToPath(tabId, tabSession?.id, filePath);
+        // If multiple files are selected, prevent navigation
+        if ((tab?.selectedFiles?.length ?? 0) > 1) {
+            return;
+        }
+
+        // If file is not a directory, don't navigate
+        if (!file.is_directory) {
+            toast.error("Cannot open files, only directories can be navigated.");
+            return;
+        }
+
+        navigateToPath(tabId, tabSession?.id, file.path);
     }
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>, filePath: string) => {
@@ -76,15 +92,6 @@ export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile }: 
 
         clearSelection(tab.id);
         selectFile(tab.id, filePath);
-    }
-
-    const handleContextMenu = (_e: React.MouseEvent<HTMLDivElement>, filePath: string) => {
-        if (!tab) return;
-
-        // Select the file if not already selected
-        if (!tab.selectedFiles.includes(filePath)) {
-            selectFile(tab.id, filePath);
-        }
     }
 
     const handleDownload = async () => {
@@ -154,40 +161,62 @@ export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile }: 
                 {/* Files Row */}
                 {tab?.files?.map(file => (
                     <ContextMenu key={file.path} modal={false}>
-                        <ContextMenuTrigger>
+                        <ContextMenuTrigger onContextMenu={() => {
+                            // If multiple files are selected, show context menu for all
+                            if (tab?.selectedFiles?.length > 1) {
+                                return;
+                            }
+
+                            selectFile(tab.id, file.path);
+                        }}>
                             <div
-                                key={file.path}
-                                className={`hover:bg-muted text-xs flex items-center py-1 px-2 rounded mx-1 mt-1 border ${tab.selectedFiles.includes(file.path) ? 'bg-blue-500/10 border-blue-500' : 'bg-background border-transparent'}`}
+                                className={
+                                    "border-b "
+                                    + (listViewSize === "compact" ? "p-0" : "p-1")
+                                }
                                 onClick={(e) => handleClick(e, file.path)}
-                                onDoubleClick={(e) => {
-                                    handleDoubleClick(e, file.path)
-                                }}
-                                onContextMenu={(e) => handleContextMenu(e, file.path)}
+                                onDoubleClick={(e) => handleDoubleClick(e, file)}
                             >
-                                {/* {file.name} - {bytesSizeToString(file.size)} */}
-                                <span className="flex-1 flex items-center gap-2">
-                                    {file.is_directory ? (
-                                        file.name === '..' ? (
-                                            <img src={getIconForFileType(file.name, true)} alt="Folder Icon" className="inline mr-1 w-6 h-6" />
-                                        ) : (
-                                            <img src={getIconForFileType(file.name, true)} alt="Folder Icon" className="inline mr-1 w-6 h-6" />
-                                        )
-                                    ) : (
-                                        <img src={getIconForFileType(file.name)} alt="File Icon" className="inline mr-1 w-6 h-6" />
-                                    )}
-                                    {file.name}
-                                </span>
-                                <span
-                                    className="w-24 text-right text-muted-foreground"
-                                >{file.is_directory ? '-' : bytesSizeToString(file.size)}</span>
-                                <span
-                                    className="w-32 text-right text-muted-foreground pr-4"
-                                >
-                                    {new Date(file.modified).toLocaleDateString()}
-                                </span>
+                                {listViewSize === "compact" ? (
+                                    <ListViewCompact
+                                        file={file}
+                                        onToggleSelection={(file, checked) => {
+                                            if (checked) {
+                                                addFileToSelection(tab.id, file.path);
+                                            } else {
+                                                removeFileFromSelection(tab.id, file.path);
+                                            }
+                                        }}
+                                    />
+                                ) : (
+                                    <ListViewComfortable file={file} />
+                                )}
                             </div>
                         </ContextMenuTrigger>
                         <ContextMenuContent className="w-52">
+                            <ContextMenuGroup>
+                                {tab?.selectedFiles?.length <= 1 ? (
+                                    <div className="flex flex-row justify-start items-center gap-1 p-1">
+                                        <span className="size-[26px] flex items-center justify-center">
+                                            {file.is_directory ? (
+                                                file.name === '..' ? (
+                                                    <img src={getIconForFileType(file.name, true)} alt="Folder Icon" className="inline w-6 h-6" />
+                                                ) : (
+                                                    <img src={getIconForFileType(file.name, true)} alt="Folder Icon" className="inline w-6 h-6" />
+                                                )
+                                            ) : (
+                                                <img src={getIconForFileType(file.name)} alt="File Icon" className="inline w-6 h-6" />
+                                            )}
+                                        </span>
+                                        <span className="text-sm">{fileNameWithoutExtension(file.name)}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-row justify-start items-center gap-1 p-2 text-sm">
+                                        {tab.selectedFiles.length} files selected
+                                    </div>
+                                )}
+                            </ContextMenuGroup>
+                            <ContextMenuSeparator />
                             <ContextMenuItem
                                 inset
                                 variant="default"
@@ -222,6 +251,30 @@ export default function ListView({ tabId, onDelete, onFileInfo, onRenameFile }: 
                                 <span>Rename</span>
                                 <ContextMenuShortcut>⌘R</ContextMenuShortcut>
                             </ContextMenuItem>
+                            <ContextMenuSeparator />
+                            {/* <ContextMenuItem
+                                inset
+                                variant="default"
+                                onClick={() => {
+                                    onCopy();
+                                }}
+                            >
+                                <Copy size={16} aria-hidden="true" />
+                                <span>Copy</span>
+                                <ContextMenuShortcut>⌘C</ContextMenuShortcut>
+                            </ContextMenuItem> */}
+                            <ContextMenuItem
+                                inset
+                                variant="default"
+                                onClick={() => {
+                                    onCut();
+                                }}
+                            >
+                                <Scissors size={16} aria-hidden="true" />
+                                <span>Cut</span>
+                                <ContextMenuShortcut>⌘X</ContextMenuShortcut>
+                            </ContextMenuItem>
+                            <ContextMenuSeparator />
                             <ContextMenuItem
                                 inset
                                 variant="destructive"

@@ -1,4 +1,4 @@
-import { Download, Upload, XIcon } from "lucide-react"
+import { Copy, Download, Upload, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { bytesSizeToString } from "@/utils/file.util";
@@ -12,7 +12,7 @@ type Props = {
     path: string;
     transferred: number;
     total: number;
-    type: "upload" | "download";
+    type: "upload" | "download" | "copy";
     transferId: string;
     status: "active" | "cancelled" | "completed";
 }
@@ -38,8 +38,10 @@ export default function ProcessProgress({ path, transferred, total, type, transf
                 >
                     {type === "upload" ? (
                         <Upload size={16} className={status === "active" ? "text-blue-500" : "text-gray-500"} />
-                    ) : (
+                    ) : type === "download" ? (
                         <Download size={16} className={status === "active" ? "text-green-500" : "text-gray-500"} />
+                    ) : (
+                        <Copy size={16} className={status === "active" ? "text-yellow-500" : "text-gray-500"} />
                     )}
                 </div>
                 <div className="flex grow items-center gap-12 flex-1">
@@ -56,7 +58,7 @@ export default function ProcessProgress({ path, transferred, total, type, transf
                                     className="text-xs text-muted-foreground"
                                     variant="secondary"
                                 >
-                                    {type === "upload" ? "Uploading" : "Downloading"}
+                                    {type === "upload" ? "Uploading" : type === "download" ? "Downloading" : "Copying"}
                                 </Badge>
                             ) : status === "cancelled" ? (
                                 <Badge
@@ -70,7 +72,7 @@ export default function ProcessProgress({ path, transferred, total, type, transf
                                     className="text-xs"
                                     variant="default"
                                 >
-                                    {type === "upload" ? "Upload" : "Download"} Completed
+                                    {type === "upload" ? "Upload" : type === "download" ? "Download" : "Copy"} Completed
                                 </Badge>
                             )
                         }

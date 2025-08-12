@@ -360,12 +360,226 @@ pub async fn get_active_transfers() -> Result<Vec<String>, String> {
     Ok(cancel_map.keys().cloned().collect())
 }
 
-// #[tauri::command]
-// pub async fn read_file(...) -> Result<String, String> {
-//     // New feature: Read file content
-// }
+#[tauri::command]
+pub async fn copy_item(
+    connection_id: String,
+    source_path: String,
+    dest_path: String,
+    is_directory: bool,
+    connections: State<'_, ConnectionManagerState>,
+    window: Window,
+) -> Result<String, String> {
+    let conn_manager = connections.lock().unwrap();
+    let session = conn_manager
+        .get(&connection_id)
+        .ok_or("Connection not found")?;
 
-// #[tauri::command]
-// pub async fn save_file(...) -> Result<(), String> {
-//     // New feature: Save file content
-// }
+    let sftp = session
+        .sftp()
+        .map_err(|e| format!("Failed to create SFTP channel: {}", e))?;
+
+    // Generate a unique transfer ID and create a cancel flag
+    let transfer_id = Uuid::new_v4().to_string();
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+    TRANSFER_CANCEL_MAP
+        .lock()
+        .unwrap()
+        .insert(transfer_id.clone(), cancel_flag.clone());
+
+    // Spawn a new task for the copy operation
+    let transfer_id_return = transfer_id.clone();
+    tokio::spawn({
+        let transfer_id = transfer_id.clone();
+        let window = window.clone();
+        async move {
+            if is_directory {
+                copy_directory_recursive_with_progress(
+                    &sftp,
+                    &source_path,
+                    &dest_path,
+                    &window,
+                    &transfer_id,
+                    cancel_flag.clone(),
+                )?;
+            } else {
+                copy_file_with_progress(
+                    &sftp,
+                    &source_path,
+                    &dest_path,
+                    &window,
+                    &transfer_id,
+                    cancel_flag.clone(),
+                )?;
+            }
+
+            // Remove the transfer ID from the cancel map
+            TRANSFER_CANCEL_MAP.lock().unwrap().remove(&transfer_id);
+
+            // Emit process_finished event
+            window
+                .emit(
+                    "process_finished",
+                    serde_json::json!({
+                        "connection_id": connection_id,
+                        "path": dest_path,
+                        "type": "copy",
+                        "transfer_id": transfer_id
+                    }),
+                )
+                .ok();
+
+            Ok::<(), String>(())
+        }
+    });
+
+    Ok(transfer_id_return)
+}
+
+fn copy_file_with_progress(
+    sftp: &ssh2::Sftp,
+    src: &str,
+    dst: &str,
+    window: &Window,
+    transfer_id: &str,
+    cancel_flag: Arc<AtomicBool>,
+) -> Result<(), String> {
+    let mut src_file = sftp
+        .open(Path::new(src))
+        .map_err(|e| format!("Failed to open source file: {}", e))?;
+    let mut dst_file = sftp
+        .create(Path::new(dst))
+        .map_err(|e| format!("Failed to create destination file: {}", e))?;
+
+    let total_size = src_file
+        .stat()
+        .map_err(|e| format!("Failed to stat source file: {}", e))?
+        .size
+        .unwrap_or(0);
+
+    let mut buffer = [0u8; 8192];
+    let mut transferred = 0u64;
+    let mut cancelled = false;
+
+    loop {
+        let n = src_file
+            .read(&mut buffer)
+            .map_err(|e| format!("Read error: {}", e))?;
+        if n == 0 {
+            break;
+        }
+        dst_file
+            .write_all(&buffer[..n])
+            .map_err(|e| format!("Write error: {}", e))?;
+        transferred += n as u64;
+
+        // Emit progress event
+        window
+            .emit(
+                "copy_progress",
+                serde_json::json!({
+                    "path": dst,
+                    "transferred": transferred,
+                    "total": total_size,
+                    "type": "copy",
+                    "transfer_id": transfer_id
+                }),
+            )
+            .ok();
+
+        // Check for cancellation
+        if cancel_flag.load(Ordering::Relaxed) {
+            window
+                .emit(
+                    "transfer_cancelled",
+                    serde_json::json!({
+                        "transfer_id": transfer_id,
+                        "type": "copy"
+                    }),
+                )
+                .ok();
+            cancelled = true;
+            break;
+        }
+    }
+
+    if cancelled {
+        Err("Copy operation cancelled".to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn copy_directory_recursive_with_progress(
+    sftp: &ssh2::Sftp,
+    src: &str,
+    dst: &str,
+    window: &Window,
+    transfer_id: &str,
+    cancel_flag: Arc<AtomicBool>,
+) -> Result<(), String> {
+    let src_path = Path::new(src);
+    let dst_path = Path::new(dst);
+    sftp.mkdir(dst_path, 0o755)
+        .map_err(|e| format!("Failed to create destination directory {}: {}", dst, e))?;
+
+    let entries = sftp
+        .readdir(src_path)
+        .map_err(|e| format!("Failed to read source directory {}: {}", src, e))?;
+
+    for (file_path, stat) in entries {
+        let name = file_path.file_name().unwrap_or_default().to_string_lossy();
+        if name == "." || name == ".." {
+            continue;
+        }
+        let src_child = file_path.to_string_lossy().replace("\\", "/");
+        let dst_child = format!("{}/{}", dst, name);
+
+        if stat.is_dir() {
+            copy_directory_recursive_with_progress(
+                sftp,
+                &src_child,
+                &dst_child,
+                window,
+                transfer_id,
+                cancel_flag.clone(),
+            )?;
+        } else {
+            copy_file_with_progress(
+                sftp,
+                &src_child,
+                &dst_child,
+                window,
+                transfer_id,
+                cancel_flag.clone(),
+            )?;
+        }
+
+        // Check for cancellation
+        if cancel_flag.load(Ordering::Relaxed) {
+            return Err("Copy operation cancelled".to_string());
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn move_item(
+    connection_id: String,
+    source_path: String,
+    dest_path: String,
+    connections: State<'_, ConnectionManagerState>,
+) -> Result<(), String> {
+    let mut conn_manager = connections.lock().unwrap();
+    let session = conn_manager
+        .get_mut(&connection_id)
+        .ok_or("Connection not found")?;
+
+    let sftp = session
+        .sftp()
+        .map_err(|e| format!("Failed to create SFTP channel: {}", e))?;
+
+    sftp.rename(Path::new(&source_path), Path::new(&dest_path), None)
+        .map_err(|e| format!("Failed to move item: {}", e))?;
+    Ok(())
+}

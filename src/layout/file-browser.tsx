@@ -2,13 +2,11 @@ import { FolderOpen, FolderPlus, X } from "lucide-react";
 import useTabStore from "@/stores/tab.store";
 import PathBar from "./path-bar";
 import ListView from "./file-viewer/list-view";
-import useSessionStore from "@/stores/session.store";
 import { useEffect, useState } from "react";
 import DeleteFilesDialog from "@/dialogs/delete-files.dialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Footer from "./footer";
 import Bookmarks from "./bookmarks";
-import useBookmarkStore from "@/stores/bookmark.store";
 import FileInfoDialog from "@/dialogs/file-info.dialog";
 import { FileItem } from "@/types/FileItem";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -16,6 +14,9 @@ import { toast } from "sonner";
 import RenameItemDialog from "@/dialogs/rename-file.dialog";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { MorphingText } from "@/components/magicui/morphing-text";
+import useConfigStore from "@/stores/config.store";
+import IClipboardItem from "@/models/clipboarditem.model";
+import useClipboardStore from "@/stores/clipboard.store";
 
 
 export default function FileBrowser() {
@@ -23,7 +24,6 @@ export default function FileBrowser() {
     const activeTabId = useTabStore((state) => state.activeTabId);
     const setActiveTab = useTabStore((state) => state.setActiveTab);
     const activeTab = useTabStore((state) => state.getTabById(activeTabId));
-    const sessions = useSessionStore((state) => state.sessions);
 
     // State
     const [deleteFiles, setDeleteFiles] = useState<string[]>([]);
@@ -31,31 +31,56 @@ export default function FileBrowser() {
     const [renameFile, setRenameFile] = useState<FileItem | null>(null);
 
     // Handlers
-    const showBookmarks = useBookmarkStore((state) => state.showBookmarks);
+    const showBookmarks = useConfigStore((state) => state.showBookmarks);
     const closeTab = useTabStore((state) => state.closeTab);
     const createTab = useTabStore((state) => state.createTab);
-
+    const addClipboardItem = useClipboardStore((state) => state.addItem);
+    const clearSessionClipboard = useClipboardStore((state) => state.clearSession);
+    const clearSelection = useTabStore((state) => state.clearSelection);
 
     const handleTabClose = (tabId: string) => {
         closeTab(tabId);
     };
 
     const handleTabCreate = () => {
-        // Set session to active tab
-        if (sessions.length > 0) {
-            const firstSession = sessions[0];
-            const newTabId = createTab(firstSession, "/");
-            setActiveTab(newTabId);
-            useTabStore.getState().navigateToPath(newTabId, firstSession.id, "/");
-
-            return;
-        }
-
         createTab();
     };
 
+    const handleClipboardAction = (type: "copy" | "cut") => {
+        const selectedFiles = activeTab?.selectedFiles ?? [];
+        if (selectedFiles.length === 0 || !activeTab?.session) {
+            toast.error("No file selected");
+            return;
+        }
+
+        // Clear the clipboard for the current session
+        clearSessionClipboard(activeTab?.session?.id);
+
+        // Add items to clipboard
+        for (const file of selectedFiles) {
+            // Find the file in the current tab's files
+            const currentFile = activeTab?.files?.find(f => f.path === file);
+            if (!currentFile) continue;
+
+            const itemId = crypto.randomUUID();
+            const clipboardItem = {
+                id: itemId,
+                action: type,
+                file: currentFile,
+                sessionId: activeTab?.session?.id,
+                status: "pending",
+            } as IClipboardItem;
+
+            // Add to clipboard store
+            addClipboardItem(clipboardItem);
+        }
+
+        // Clear selection
+        clearSelection();
+    };
+
     // Shortcuts
-    useHotkeys("meta+i", (event) => {
+    useHotkeys("meta+i, ctrl+i", (event) => {
         event.preventDefault();
 
         // Get selected file
@@ -78,6 +103,16 @@ export default function FileBrowser() {
         }
 
         setInfoDialogFile(file);
+    });
+
+    // useHotkeys("meta+c, ctrl+c", (event) => {
+    //     event.preventDefault();
+    //     handleClipboardAction("copy");
+    // });
+
+    useHotkeys("meta+x, ctrl+x", (event) => {
+        event.preventDefault();
+        handleClipboardAction("cut");
     });
 
     useEffect(() => {
@@ -200,15 +235,15 @@ export default function FileBrowser() {
 
                     {/* Window Controls */}
                     <div className="w-[80px] h-full absolute right-0 top-0 bg-gradient-to-r from-transparent to-background rounded-tr-xl">
-                        <div className="flex items-center justify-center h-full gap-1.5" data-tauri-drag-region>
+                        <div className="flex items-center justify-center h-full gap-2 opacity-10 hover:opacity-100 transition-opacity" data-tauri-drag-region>
                             <button
-                                className="size-[15px] rounded-lg bg-yellow-600 hover:bg-yellow-300"
+                                className="size-[14px] rounded-lg bg-yellow-700 hover:bg-yellow-300"
                                 onClick={handleMinimize}
                             >
                             </button>
-                            <button className="size-[15px] rounded-lg bg-green-600 hover:bg-green-300" onClick={handleMaximize}>
+                            <button className="size-[14px] rounded-lg bg-green-700 hover:bg-green-300" onClick={handleMaximize}>
                             </button>
-                            <button className="size-[15px] rounded-lg bg-red-600 hover:bg-red-300" onClick={handleClose}>
+                            <button className="size-[14px] rounded-lg bg-red-700 hover:bg-red-300" onClick={handleClose}>
                             </button>
                         </div>
                     </div>
@@ -244,6 +279,12 @@ export default function FileBrowser() {
                                     }}
                                     onRenameFile={(file) => {
                                         setRenameFile(file);
+                                    }}
+                                    onCopy={() => {
+                                        handleClipboardAction("copy");
+                                    }}
+                                    onCut={() => {
+                                        handleClipboardAction("cut");
                                     }}
                                 />
                             </div>

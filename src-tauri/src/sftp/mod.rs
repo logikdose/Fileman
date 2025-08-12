@@ -11,6 +11,7 @@ pub use directory_operations::{
     fetch_directory_size, list_directory,
 };
 pub use file_operations::{
-    cancel_transfer, delete_item, download_file, get_active_transfers, rename_item, upload_file,
+    cancel_transfer, copy_item, delete_item, download_file, get_active_transfers, move_item,
+    rename_item, upload_file,
 };
 pub use storage_info::fetch_storage_info;

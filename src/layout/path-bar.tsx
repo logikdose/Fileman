@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useSessionStore from "@/stores/session.store";
 import useTabStore from "@/stores/tab.store";
-import { ArrowLeft, ArrowRight, Download, EllipsisIcon, FolderPlus, FolderUp, Loader2, RefreshCcw, UploadCloud } from "lucide-react";
+import { ArrowLeft, ArrowRight, ClipboardIcon, Download, EllipsisIcon, FolderPlus, FolderUp, Loader2, RefreshCcw, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import CreateFolderDialog from "@/dialogs/create-folder.dialog";
 import { toast } from "sonner";
@@ -13,7 +13,9 @@ import { SettingsDialog } from "@/dialogs/settings.dialog";
 import CreateBookmarkDialog from "@/dialogs/create-bookmark.dialog";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import useProcessStore from "@/stores/process.store";
+import useConfigStore from "@/stores/config.store";
+import useClipboardStore from "@/stores/clipboard.store";
+import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 
 export default function PathBar() {
     // Menu and Dialogs
@@ -24,7 +26,7 @@ export default function PathBar() {
     const [createBookmarkDialogOpen, setCreateBookmarkDialogOpen] = useState(false);
 
     // Store hooks
-    const downloadsPath = useProcessStore((state) => state.downloadPath);
+    const downloadsPath = useConfigStore((state) => state.downloadsPath);
     const tabId = useTabStore((state) => state.activeTabId);
     const tab = useTabStore((state) => state.getTabById(tabId));
     const session = useSessionStore((state) => state.getSessionById(tab?.session?.id));
@@ -38,6 +40,12 @@ export default function PathBar() {
     const uploadFile = useSessionStore((state) => state.uploadFile);
     const downloadFile = useSessionStore((state) => state.downloadFile);
     const closeTab = useTabStore((state) => state.closeTab);
+    const selectFile = useTabStore((state) => state.selectFile);
+    const pasteClipboardItems = useClipboardStore((state) => state.paste);
+
+    // Current session clipboard
+    const clipboardItems = useClipboardStore((state) => state.items);
+    const currentSessionClipboard = clipboardItems.filter(item => item.sessionId === tab?.session?.id);
 
     // Handlers
     const handlePathChange = async (newPath: string) => {
@@ -173,6 +181,28 @@ export default function PathBar() {
         closeTab(tabId);
     }
 
+    const onPasteClipboardItems = async () => {
+        if (currentSessionClipboard.length > 0) {
+            const sessionId = tab?.session?.id;
+            const path = tab?.filePath;
+            if (!sessionId || !path) {
+                toast.error("No session or path specified");
+                return;
+            }
+
+            await pasteClipboardItems(sessionId, path);
+
+            // Refresh tab
+            if (!tabId || !tab || !tab.filePath) {
+                toast.error("No file path specified");
+                return;
+            }
+
+            // Refresh the current path
+            navigateToPath(tabId, session?.id, tab.filePath);
+        }
+    }
+
     // Hotkeys
     useHotkeys("meta+d, ctrl+d", (e) => {
         e.preventDefault();
@@ -194,6 +224,66 @@ export default function PathBar() {
     useHotkeys("meta+w, ctrl+w", (e) => {
         e.preventDefault();
         closeActiveTab();
+    });
+    useHotkeys("meta+v, ctrl+v", (e) => {
+        e.preventDefault();
+        onPasteClipboardItems();
+    });
+    useHotkeys("ArrowUp", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!tab || !tab.files || tab.files.length === 0) {
+            console.log("No files available");
+            return;
+        }
+
+        // Current selection first item
+        const selectedFiles = tab?.selectedFiles || [];
+        if (selectedFiles.length === 0) {
+            console.log("No file selected");
+            selectFile(tab.id, tab.files?.[0]?.path || "");
+            return;
+        }
+
+        const firstSelectedFile = selectedFiles[0];
+        const firstSelectedIndex = tab?.files?.findIndex(file => file.path === firstSelectedFile);
+
+        if (firstSelectedIndex === -1 || firstSelectedIndex === undefined) {
+            console.log("No more files above");
+            return;
+        }
+        const newIndex = firstSelectedIndex - 1;
+        if (newIndex < 0) {
+            console.log("No more files above");
+            return;
+        }
+
+        const newFile = tab?.files?.[newIndex];
+        if (!newFile) {
+            console.log("No more files above");
+            return;
+        }
+        selectFile(tab.id, newFile.path);
+    });
+    useHotkeys("ArrowDown", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (!tab) return;
+
+        // Current selection first item
+        const selectedFiles = tab?.selectedFiles || [];
+        if (selectedFiles.length === 0) return;
+
+        const lastSelectedFile = selectedFiles[selectedFiles.length - 1];
+        const lastSelectedIndex = tab?.files?.findIndex(file => file.path === lastSelectedFile);
+        if (lastSelectedIndex === -1 || lastSelectedIndex === undefined) return;
+        const newIndex = lastSelectedIndex + 1;
+        if (newIndex >= (tab?.files?.length || 0)) return;
+
+        const newFile = tab?.files?.[newIndex];
+        if (!newFile) return;
+        selectFile(tab.id, newFile.path);
     });
 
     // Render
@@ -275,7 +365,7 @@ export default function PathBar() {
                 <Input
                     size="sm"
                     type="text"
-                    value={tab?.filePath}
+                    value={tab?.filePath || ""}
                     onChange={(e) => {
                         const newPath = e.target.value;
                         handlePathChange(newPath);
@@ -315,10 +405,11 @@ export default function PathBar() {
                             size="xsm"
                             onClick={async () => {
                                 const connected = await useSessionStore.getState().connectToSession(session.id);
+                                const sessionName = useSessionStore.getState().getSessionById(session.id)?.name || "Session";
                                 if (connected) {
-                                    toast.success(`Connected to session ${session.id}`);
+                                    toast.success(`Connected to session ${sessionName}`);
                                 } else {
-                                    toast.error(`Failed to connect to session ${session.id}`);
+                                    toast.error(`Failed to connect to session ${sessionName}`);
                                 }
                             }}
                         >
@@ -332,7 +423,7 @@ export default function PathBar() {
             <div className="inline-flex -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
                 <Button
                     size="sm"
-                    className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
+                    className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10 pr-2"
                     variant="outline"
                     disabled={!tab?.session || tab.selectedFiles.length !== 1 || tab?.files?.find(f => f.path === tab.selectedFiles[0])?.is_directory}
                     onClick={() => {
@@ -340,7 +431,6 @@ export default function PathBar() {
                     }}
                 >
                     <Download className="-ms-1 opacity-60" size={16} aria-hidden="true" />
-                    Download
                 </Button>
                 <Button
                     size="sm"
@@ -392,6 +482,19 @@ export default function PathBar() {
                                 <FolderPlus size={16} className="opacity-60" aria-hidden="true" />
                                 <span>Bookmark</span>
                                 <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem
+                                disabled={currentSessionClipboard.length < 1}
+                                onClick={() => {
+                                    onPasteClipboardItems();
+                                }}
+                            >
+                                <ClipboardIcon size={16} className="opacity-60" aria-hidden="true" />
+                                <span>Paste</span>
+                                <DropdownMenuShortcut>⌘V</DropdownMenuShortcut>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                     </DropdownMenuContent>
