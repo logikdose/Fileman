@@ -11,6 +11,4 @@
 - Clipboard view in sidebar
 - Compact list view - checkbox selection
 - Tabs creation improved
-
-
-Copy-data is not supported in `sftp2`. Need to migrate to `openssh-sftp-client`.
+- Fixed file - date time

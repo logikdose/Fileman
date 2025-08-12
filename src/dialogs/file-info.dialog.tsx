@@ -2,7 +2,7 @@ import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, 
 import useSessionStore from "@/stores/session.store";
 import useTabStore from "@/stores/tab.store";
 import { FileItem } from "@/types/FileItem";
-import { bytesSizeToString, lastModifiedToString } from "@/utils/file.util";
+import { bytesSizeToString, dateTimeFromTimestamp } from "@/utils/file.util";
 import { listen } from "@tauri-apps/api/event";
 import { Info, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -128,7 +128,7 @@ export default function FileInfoDialog({ dialogOpen, onOpenChange, file }: Props
                                 <div className="px-2 py-2 flex flex-row">
                                     <span>Last Modified: </span>
                                     <span className="pl-2">
-                                        {file?.modified ? lastModifiedToString(file?.modified) : "Unknown"}
+                                        {file?.modified ? dateTimeFromTimestamp(file?.modified) : "Unknown"}
                                     </span>
                                 </div>
                             </div>

@@ -4,6 +4,7 @@ import { immer } from "zustand/middleware/immer";
 
 interface ConfigStore {
     listViewSize: "compact" | "comfortable";
+    listViewCheckbox: boolean;
 
     // Downloads
     downloadsPath: string | null;
@@ -22,6 +23,7 @@ interface ConfigStore {
 
     // Methods
     setListViewSize: (size: "compact" | "comfortable") => void;
+    setListViewCheckbox: (checked: boolean) => void;
     setAutoClearSuccessNotifications: (autoClear: boolean) => void;
     setShowClipboard: (show: boolean) => void;
     setShowBookmarks: (show: boolean) => void;
@@ -34,6 +36,7 @@ const useConfigStore = create<ConfigStore>()(
         persist(
             immer((set) => ({
                 listViewSize: "comfortable", // Default view size
+                listViewCheckbox: true, // Default list view checkbox
                 downloadsPath: null, // Default downloads path
                 showBookmarks: true, // Default bookmark visibility
                 highlightBookmarks: true, // Default highlight bookmarks
@@ -41,6 +44,7 @@ const useConfigStore = create<ConfigStore>()(
                 showClipboard: true, // Default clipboard visibility
                 autoClearSuccessNotifications: true, // Default auto-clear success notifications
                 setListViewSize: (size) => set({ listViewSize: size }),
+                setListViewCheckbox: (checked) => set({ listViewCheckbox: checked }),
                 setDownloadsPath: (path) => set({ downloadsPath: path }),
                 setAutoClearSuccessNotifications: (autoClear) => set({ autoClearSuccessNotifications: autoClear }),
                 setShowBookmarks: (show) => set({ showBookmarks: show }),
@@ -52,6 +56,7 @@ const useConfigStore = create<ConfigStore>()(
                 name: "configStore",
                 partialize: (state) => ({
                     listViewSize: state.listViewSize,
+                    listViewCheckbox: state.listViewCheckbox,
                     downloadsPath: state.downloadsPath,
                     showClipboard: state.showClipboard,
                     showBookmarks: state.showBookmarks,

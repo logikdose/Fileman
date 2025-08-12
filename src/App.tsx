@@ -11,10 +11,7 @@ function App() {
 
   const disconnectAllSessions = useSessionStore((state) => state.disconnectAllSessions);
   useEffect(() => {
-    // Disconnect all sessions on unmount
-    return () => {
-      disconnectAllSessions();
-    };
+    disconnectAllSessions();
   }, []);
 
 

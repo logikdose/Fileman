@@ -1,7 +1,8 @@
 import useClipboardStore from "@/stores/clipboard.store";
+import useConfigStore from "@/stores/config.store";
 import useTabStore from "@/stores/tab.store";
 import { FileItem } from "@/types/FileItem"
-import { bytesSizeToString, getIconForFileType } from "@/utils/file.util";
+import { bytesSizeToString, dateTimeFromTimestamp, getIconForFileType } from "@/utils/file.util";
 import { Check, Copy, Scissors } from "lucide-react";
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 export default function ListViewCompact({ file, onToggleSelection }: Props) {
     // Store
     const tab = useTabStore((state) => state.getTabById(state.activeTabId));
+    const listViewCheckbox = useConfigStore((state) => state.listViewCheckbox);
     const clipboardItems = useClipboardStore((state) => state.items);
 
     const clipboardItem = clipboardItems.find(item => item.file.path === file.path && item.sessionId === tab?.session?.id);
@@ -25,31 +27,33 @@ export default function ListViewCompact({ file, onToggleSelection }: Props) {
                 + (tab?.selectedFiles.includes(file.path) ? "bg-blue-500/10 border-blue-500 " : "bg-background border-transparent ")
             }
         >
-            <div
-                className="py-1 px-2"
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    // Toggle selection
-                    const checked = tab?.selectedFiles.includes(file.path);
-                    if (checked) {
-                        onToggleSelection(file, false);
-                    } else {
-                        onToggleSelection(file, true);
-                    }
-                }}
-            >
+            {listViewCheckbox && (
                 <div
-                    className="border rounded-sm size-4 flex items-center justify-center cursor-pointer hover:bg-muted/20"
+                    className="py-1 px-2"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Toggle selection
+                        const checked = tab?.selectedFiles.includes(file.path);
+                        if (checked) {
+                            onToggleSelection(file, false);
+                        } else {
+                            onToggleSelection(file, true);
+                        }
+                    }}
                 >
-                    {tab?.selectedFiles.includes(file.path) ? (
-                        <Check className="size-3 text-muted-foreground" />
-                    ) : (
-                        <div className="bg-background border-transparent" />
-                    )}
+                    <div
+                        className="border rounded-sm size-4 flex items-center justify-center cursor-pointer hover:bg-muted/20"
+                    >
+                        {tab?.selectedFiles.includes(file.path) ? (
+                            <Check className="size-3 text-muted-foreground" />
+                        ) : (
+                            <div className="bg-background border-transparent" />
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
             <span className={
                 "flex-1 flex items-center gap-2 "
                 + (clipboardItem?.action === "cut" ? "opacity-30" : "")
@@ -71,12 +75,12 @@ export default function ListViewCompact({ file, onToggleSelection }: Props) {
                 </span>
             )}
             <span
-                className="w-24 text-right text-muted-foreground"
+                className="w-24 text-right text-muted-foreground mr-5"
             >{file.is_directory ? '-' : bytesSizeToString(file.size)}</span>
             <span
                 className="w-32 text-right text-muted-foreground pr-4"
             >
-                {new Date(file.modified).toLocaleDateString()}
+                {dateTimeFromTimestamp(file.modified)}
             </span>
         </div>
     )

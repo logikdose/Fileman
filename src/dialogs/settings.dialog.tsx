@@ -59,6 +59,7 @@ import useConfigStore from "@/stores/config.store"
 
 const data = {
     nav: [
+        { id: "files", name: "Files View", icon: FolderOpen },
         { id: "downloads", name: "Downloads", icon: FolderOpen },
         { id: "clipboard", name: "Clipboard", icon: Copy },
         { id: "notifications", name: "Notifications", icon: Bell },
@@ -82,6 +83,8 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
     const [selectedTab, setSelectedTab] = React.useState(data.nav[0].id)
 
     // Bookmarks
+    const listViewCheckbox = useConfigStore((state) => state.listViewCheckbox);
+    const setListViewCheckbox = useConfigStore((state) => state.setListViewCheckbox);
     const autoClearSuccessNotifications = useConfigStore((state) => state.autoClearSuccessNotifications);
     const setAutoClearSuccessNotifications = useConfigStore((state) => state.setAutoClearSuccessNotifications);
     const downloadsPath = useConfigStore((state) => state.downloadsPath);
@@ -158,6 +161,36 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
                         </header>
                         <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pt-0">
                             <div className="border rounded-lg p-4 bg-muted shadow-sm h-full overflow-y-auto">
+                                {selectedTab === "files" && (
+                                    <>
+                                        <h2 className="text-lg">Files</h2>
+                                        <p className="text-sm text-muted-foreground">
+                                            Customize your file management experience.
+                                        </p>
+
+
+                                        <div className="mt-4 border-input has-data-[state=checked]:border-primary/50 relative flex w-full items-start gap-2 rounded-md border p-4 shadow-xs outline-none">
+                                            <Switch
+                                                id={"priority-bookmarks"}
+                                                className="order-1 h-4 w-6 after:absolute after:inset-0 [&_span]:size-3 data-[state=checked]:[&_span]:translate-x-2 data-[state=checked]:[&_span]:rtl:-translate-x-2"
+                                                aria-describedby={`priority-bookmarks-description`}
+                                                checked={listViewCheckbox}
+                                                onCheckedChange={(checked) => {
+                                                    setListViewCheckbox(checked);
+                                                }}
+                                            />
+                                            <div className="grid grow gap-2">
+                                                <Label htmlFor={"priority-bookmarks"}>
+                                                    List View Checkbox
+                                                </Label>
+                                                <p id={`priority-bookmarks-description`} className="text-muted-foreground text-xs">
+                                                    Show a checkbox in the list view for each item.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
                                 {selectedTab === "downloads" && (
                                     <>
                                         <h2 className="text-lg">Downloads</h2>
@@ -408,7 +441,7 @@ export function SettingsDialog({ dialogOpen, onOpenChange }: Props) {
 
                                         <div className="mt-4 space-y-1">
                                             <p className="text-muted-foreground text-sm">
-                                                Version: <span className="font-semibold">1.0.1</span>
+                                                Version: <span className="font-semibold">1.0.2</span>
                                             </p>
                                             <Button className="mt-2" variant="outline" onClick={() => openUrl("https://github.com/logikdose/fileman")}>
                                                 Github <Github />

@@ -1,7 +1,7 @@
 import useClipboardStore from "@/stores/clipboard.store";
 import useTabStore from "@/stores/tab.store";
 import { FileItem } from "@/types/FileItem";
-import { bytesSizeToString, fileExtensionFromName, fileNameWithoutExtension, getIconForFileType } from "@/utils/file.util";
+import { bytesSizeToString, dateTimeFromTimestamp, fileExtensionFromName, fileNameWithoutExtension, getIconForFileType } from "@/utils/file.util";
 import { Copy, Scissors } from "lucide-react";
 
 type Props = {
@@ -46,12 +46,12 @@ export default function ListViewComfortable({ file }: Props) {
                 </span>
             )}
             <span
-                className="w-24 text-right text-muted-foreground"
+                className="w-24 text-right text-muted-foreground mr-5"
             >{file.is_directory ? '-' : bytesSizeToString(file.size)}</span>
             <span
                 className="w-32 text-right text-muted-foreground pr-4"
             >
-                {new Date(file.modified).toLocaleDateString()}
+                {dateTimeFromTimestamp(file.modified)}
             </span>
         </div>
     )
