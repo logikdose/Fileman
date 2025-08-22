@@ -1,0 +1,6 @@
+export { default as RustIcon } from './RustIcon'
+export { default as ReactIcon } from './ReactIcon'
+export { default as TypescriptIcon } from './TypescriptIcon'
+export { default as TauriIcon } from './TauriIcon'
+export { default as ShadcnIcon } from './ShadcnIcon'
+export { default as ViteIcon } from './ViteIcon'
