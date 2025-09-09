@@ -37,7 +37,7 @@ export default function SessionEditDialog({ dialogOpen, onOpenChange, session }:
     };
 
     // Form Handlers
-    const handleConnect = () => {
+    const handleConnect = async () => {
         if (!isFormValid()) {
             toast.error("Please fill in all required fields.");
             return;
@@ -62,7 +62,7 @@ export default function SessionEditDialog({ dialogOpen, onOpenChange, session }:
 
         // Save session to store (this would be replaced with actual store logic)
         try {
-            const newSession = updateSession(updatedSession);
+            const newSession = await updateSession(updatedSession);
             if (!newSession) {
                 toast.error("Failed to add session. Please try again.");
                 return;

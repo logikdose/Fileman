@@ -42,7 +42,7 @@ export default function SessionWizardDialog({ dialogOpen, onOpenChange, trigger 
         return host && port && username && (password || privateKeyPath);
     };
 
-    const handleConnect = () => {
+    const handleConnect = async () => {
         if (!isFormValid()) {
             toast.error("Please fill in all required fields.");
             return;
@@ -61,7 +61,7 @@ export default function SessionWizardDialog({ dialogOpen, onOpenChange, trigger 
         } as Omit<ISession, "id" | "createdAt" | "updatedAt" | "lastUsedAt">;
 
         // Save session to store (this would be replaced with actual store logic)
-        const newSession = addSession(session);
+        const newSession = await addSession(session);
         if (!newSession) {
             toast.error("Failed to add session. Please try again.");
             return;

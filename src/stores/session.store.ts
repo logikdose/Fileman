@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import CryptoJS from "crypto-js";
 import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { invoke } from "@tauri-apps/api/core";
@@ -20,8 +19,8 @@ interface SessionStore {
   error?: string;
 
   // Session CRUD operations
-  addSession: (session: Omit<ISession, "id" | "createdAt" | "updatedAt">) => string | undefined;
-  updateSession: (update: ISession) => string | undefined;
+  addSession: (session: Omit<ISession, "id" | "createdAt" | "updatedAt">) => Promise<string | undefined>;
+  updateSession: (update: ISession) => Promise<string | undefined>;
   deleteSession: (id: string) => Promise<boolean>;
   duplicateSession: (id: string) => void;
   toggleFavorite: (id: string) => void;
@@ -60,17 +59,120 @@ interface SessionStore {
   clearAllConnections: () => Promise<void>;
 }
 
-function encrypt(text?: string): string | undefined {
-  if (!text) return undefined;
-  return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
+// Convert string to ArrayBuffer
+function stringToArrayBuffer(str: string): ArrayBuffer {
+  const encoder = new TextEncoder();
+  return encoder.encode(str).buffer;
 }
 
-function decrypt(cipher?: string): string | undefined {
-  if (!cipher) return undefined;
+// Convert ArrayBuffer to string
+function arrayBufferToString(buffer: ArrayBuffer): string {
+  const decoder = new TextDecoder();
+  return decoder.decode(buffer);
+}
+
+// Convert Uint8Array to base64
+function uint8ArrayToBase64(uint8Array: Uint8Array): string {
+  let binary = '';
+  const len = uint8Array.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary);
+}
+
+// Convert base64 to Uint8Array
+function base64ToUint8Array(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// Derive a key from the encryption key string
+async function getKey(): Promise<CryptoKey> {
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    stringToArrayBuffer(ENCRYPTION_KEY),
+    "PBKDF2",
+    false,
+    ["deriveBits", "deriveKey"]
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: stringToArrayBuffer("fileman-salt"), // In production, use a random salt
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function encrypt(text?: string): Promise<string | undefined> {
+  if (!text) return undefined;
+
   try {
-    const bytes = CryptoJS.AES.decrypt(cipher, ENCRYPTION_KEY);
-    return bytes.toString(CryptoJS.enc.Utf8);
-  } catch {
+    const key = await getKey();
+    const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV for AES-GCM
+    const encodedText = stringToArrayBuffer(text);
+
+    const encrypted = await crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv: iv,
+      },
+      key,
+      encodedText
+    );
+
+    // Combine IV and encrypted data
+    const combined = new Uint8Array(iv.length + encrypted.byteLength);
+    combined.set(iv);
+    combined.set(new Uint8Array(encrypted), iv.length);
+
+    // Convert to base64 for storage
+    return uint8ArrayToBase64(combined);
+  } catch (error) {
+    console.error("Encryption failed:", error);
+    return undefined;
+  }
+}
+
+async function decrypt(cipher?: string): Promise<string | undefined> {
+  if (!cipher) return undefined;
+
+  try {
+    const key = await getKey();
+
+    // Convert from base64
+    const combinedArray = base64ToUint8Array(cipher);
+
+    // Extract IV and encrypted data
+    const iv = combinedArray.slice(0, 12);
+    const encrypted = combinedArray.slice(12);
+
+    const decrypted = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: iv,
+      },
+      key,
+      encrypted
+    );
+
+    return arrayBufferToString(decrypted);
+  } catch (error) {
+    console.error("Decryption failed:", error);
+    // If decryption fails, it might be old crypto-js format or corrupted data
+    // For security, we'll return undefined rather than attempting fallback
     return undefined;
   }
 }
@@ -87,7 +189,7 @@ const useSessionStore = create<SessionStore>()(
         error: undefined,
 
         // Session CRUD operations
-        addSession: (sessionData) => {
+        addSession: async (sessionData) => {
           // Check if session with same host and username already exists
           const existingSession = get().sessions.find((s) => s.host === sessionData.host && s.username === sessionData.username && s.port === sessionData.port);
 
@@ -100,8 +202,8 @@ const useSessionStore = create<SessionStore>()(
 
           const newSession: ISession = {
             ...sessionData,
-            password: encrypt(sessionData.password),
-            passphrase: encrypt(sessionData.passphrase),
+            password: await encrypt(sessionData.password),
+            passphrase: await encrypt(sessionData.passphrase),
             id: crypto.randomUUID(),
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -116,7 +218,11 @@ const useSessionStore = create<SessionStore>()(
           return newSession.id; // Session added successfully
         },
 
-        updateSession: (update) => {
+        updateSession: async (update) => {
+          // Handle async encryption outside of immer state update first
+          const encryptedPassword = update.password ? await encrypt(update.password) : undefined;
+          const encryptedPassphrase = update.passphrase ? await encrypt(update.passphrase) : undefined;
+
           set((state) => {
             const sessionIndex = state.sessions.findIndex((s) => s.id === update.id);
             if (sessionIndex !== -1) {
@@ -126,9 +232,9 @@ const useSessionStore = create<SessionStore>()(
                 host: update.host,
                 port: update.port,
                 username: update.username,
-                password: update.password ? encrypt(update.password) : undefined,
+                password: encryptedPassword,
                 privateKeyPath: update.privateKeyPath ? update.privateKeyPath : undefined,
-                passphrase: update.passphrase ? encrypt(update.passphrase) : undefined,
+                passphrase: encryptedPassphrase,
                 createdAt: state.sessions[sessionIndex].createdAt,
                 lastUsedAt: state.sessions[sessionIndex].lastUsedAt,
                 updatedAt: new Date(),
@@ -268,8 +374,8 @@ const useSessionStore = create<SessionStore>()(
             get().updateSessionStatus(sessionId, "connecting");
 
             // Decrypt password and passphrase before sending to backend
-            const decryptedPassword = decrypt(session.password);
-            const decryptedPassphrase = decrypt(session.passphrase);
+            const decryptedPassword = await decrypt(session.password);
+            const decryptedPassphrase = await decrypt(session.passphrase);
 
             // Call Rust backend to connect
             const connectionId = await invoke("connect_sftp", {
