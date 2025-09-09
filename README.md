@@ -32,22 +32,13 @@ To start developing Fileman, you need to set up your environment. This includes 
    npm install
    ```
 
-3. Install Rust
-   If you haven't installed Rust yet, begin by installing it using [rustup](https://rustup.rs/)
-
-4. Add unique Encryption key to `.env` file (Create new if it doesn't exist at the root of the project)
-
-   ```bash
-   VITE_ENCRYPTION_KEY=your_secret_key_here
-   ```
-
-4. Run the application
+3. Run the application
 
    ```bash
    npm run tauri dev
    ```
 
-5. Wait for the application to start. It will open in a new window.
+4. Wait for the application to start. It will open in a new window.
 
 ## Tauri plugins not installed?
 
@@ -56,6 +47,7 @@ Run this command to install all tauri dependencies.
    ```bash
    cd src-tauri
    cargo update
+   cargo fetch
    ```
 
 ## Build
